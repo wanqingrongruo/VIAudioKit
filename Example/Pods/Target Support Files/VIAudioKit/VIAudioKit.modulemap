@@ -1,0 +1,6 @@
+framework module VIAudioKit {
+  umbrella header "VIAudioKit-umbrella.h"
+
+  export *
+  module * { export * }
+}

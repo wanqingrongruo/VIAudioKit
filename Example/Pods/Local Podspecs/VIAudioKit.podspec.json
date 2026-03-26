@@ -1,0 +1,34 @@
+{
+  "name": "VIAudioKit",
+  "version": "0.1.0",
+  "summary": "Cross-platform audio player with chunked downloading, custom decoding and AVAudioEngine rendering.",
+  "homepage": "https://github.com/example/VIAudioKit",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "VIAudioKit": "dev@example.com"
+  },
+  "source": {
+    "git": "https://github.com/example/VIAudioKit.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "15.0",
+    "osx": "12.0"
+  },
+  "swift_versions": "5.9",
+  "source_files": "Sources/**/*.swift",
+  "frameworks": [
+    "Foundation",
+    "AVFoundation",
+    "AudioToolbox",
+    "Network",
+    "CryptoKit"
+  ],
+  "pod_target_xcconfig": {
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "COCOAPODS"
+  },
+  "swift_version": "5.9"
+}

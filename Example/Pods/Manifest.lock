@@ -1,0 +1,16 @@
+PODS:
+  - VIAudioKit (0.1.0)
+
+DEPENDENCIES:
+  - VIAudioKit (from `../`)
+
+EXTERNAL SOURCES:
+  VIAudioKit:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  VIAudioKit: 32fd4a69eb85e57422edb791b6a73a25949fcac2
+
+PODFILE CHECKSUM: 3eb39bec89cd90bce173dd64f10426b46c70697c
+
+COCOAPODS: 1.16.2

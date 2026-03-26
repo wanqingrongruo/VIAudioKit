@@ -1,0 +1,21 @@
+name: VIAudioKitDemo
+options:
+  bundleIdPrefix: com.viaudiokit
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+targets:
+  VIAudioKitDemo:
+    type: application
+    platform: iOS
+    sources:
+      - VIAudioKitDemo
+    settings:
+      base:
+        INFOPLIST_FILE: VIAudioKitDemo/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.viaudiokit.demo
+        TARGETED_DEVICE_FAMILY: "1,2"

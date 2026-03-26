@@ -1,0 +1,6 @@
+framework module Pods_VIAudioKitDemo {
+  umbrella header "Pods-VIAudioKitDemo-umbrella.h"
+
+  export *
+  module * { export * }
+}
