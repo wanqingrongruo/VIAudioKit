@@ -29,7 +29,7 @@ public final class VICacheUnit: Codable, @unchecked Sendable {
     /// Number of active readers / writers. Merge only happens when this reaches 0.
     private var workingCount: Int = 0
 
-    private let lock = NSLock()
+    private let lock = NSRecursiveLock()
 
     // MARK: - CodingKeys
 
@@ -234,6 +234,17 @@ public final class VICacheUnit: Codable, @unchecked Sendable {
         lock.unlock()
 
         return mergedName
+    }
+
+    // MARK: - Internal
+
+    /// Replace all segments with the given list. Used during index reload
+    /// to discard segments whose backing files no longer exist on disk.
+    internal func replaceSegments(_ newSegments: [VICacheSegment]) {
+        lock.lock()
+        segments = newSegments
+        sortSegments()
+        lock.unlock()
     }
 
     // MARK: - Private

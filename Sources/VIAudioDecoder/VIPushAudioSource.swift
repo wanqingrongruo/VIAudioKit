@@ -45,6 +45,9 @@ public final class VIPushAudioSource: @unchecked Sendable {
     }
     public private(set) var currentOffset: Int64 = 0
     public private(set) var isClosed = false
+    /// `true` when the server responded with 200 instead of 206, indicating it
+    /// does not support Range requests. Seek via byte offset is unavailable.
+    public private(set) var rangeNotSupported = false
 
     // MARK: - Configuration
 
@@ -57,7 +60,6 @@ public final class VIPushAudioSource: @unchecked Sendable {
 
     private var session: URLSession?
     private var activeDataTask: URLSessionDataTask?
-    private var sessionDelegate: StreamSessionDelegate?
     private let pathMonitor = NWPathMonitor()
     private let pathMonitorQueue = DispatchQueue(label: "com.viaudiokit.pushsource.network")
     private var networkAvailable = true
@@ -138,6 +140,10 @@ public final class VIPushAudioSource: @unchecked Sendable {
         lock.unlock()
 
         cancelActiveDownload()
+        lock.lock()
+        session?.invalidateAndCancel()
+        session = nil
+        lock.unlock()
         retryWorkItem?.cancel()
         pathMonitor.cancel()
         closeWriteHandle()
@@ -151,12 +157,12 @@ public final class VIPushAudioSource: @unchecked Sendable {
 
         let unit = cacheManager.unit(for: url)
 
-        debugPrint("[VIPushAudioSource] doStart: offset=\(offset) unit.totalLength=\(String(describing: unit.totalLength)) self.contentLength=\(String(describing: contentLength)) cachedRanges=\(unit.cachedRanges)")
+        VILogger.debug("[VIPushAudioSource] doStart: offset=\(offset) unit.totalLength=\(String(describing: unit.totalLength)) self.contentLength=\(String(describing: contentLength)) cachedRanges=\(unit.cachedRanges)")
 
         if let total = unit.totalLength ?? contentLength {
             if contentLength == nil {
                 contentLength = total
-                debugPrint("[VIPushAudioSource] doStart: notifying contentLength=\(total)")
+                VILogger.debug("[VIPushAudioSource] doStart: notifying contentLength=\(total)")
                 onContentLengthAvailable?(total)
             }
             if offset >= total {
@@ -165,7 +171,7 @@ public final class VIPushAudioSource: @unchecked Sendable {
             }
             pushCachedDataThenDownload(unit: unit, from: offset, total: total)
         } else {
-            debugPrint("[VIPushAudioSource] doStart: no total length known, starting network request")
+            VILogger.debug("[VIPushAudioSource] doStart: no total length known, starting network request")
             startNetworkRequest(from: offset)
         }
     }
@@ -250,17 +256,19 @@ public final class VIPushAudioSource: @unchecked Sendable {
             request.setValue("bytes=\(offset)-", forHTTPHeaderField: "Range")
         }
 
-        let delegate = StreamSessionDelegate(source: self, startOffset: offset)
-        self.sessionDelegate = delegate
-
+        let delegate = StreamSessionDelegate()
+        delegate.source = self
         let config = URLSessionConfiguration.default
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         let newSession = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
-        self.session = newSession
-
         let task = newSession.dataTask(with: request)
         task.priority = URLSessionTask.highPriority
+        
+        lock.lock()
+        self.session?.invalidateAndCancel()
+        self.session = newSession
         self.activeDataTask = task
+        lock.unlock()
 
         if paused {
             task.suspend()
@@ -294,8 +302,28 @@ public final class VIPushAudioSource: @unchecked Sendable {
 
     // MARK: - Delegate handling (called from URLSession delegate)
 
-    fileprivate func handleResponse(_ response: HTTPURLResponse) {
-        debugPrint("[VIPushAudioSource] handleResponse: status=\(response.statusCode) contentLength=\(String(describing: contentLength)) headers=\(response.allHeaderFields["Content-Range"] ?? "nil")")
+    /// Returns `true` if the given task is the currently active data task.
+    /// Stale callbacks from cancelled tasks must be ignored to prevent
+    /// corrupting state after seek/retry creates a new task.
+    fileprivate func isCurrentTask(_ task: URLSessionTask) -> Bool {
+        lock.lock()
+        let current = activeDataTask === task
+        lock.unlock()
+        return current
+    }
+
+    fileprivate func handleResponse(_ response: HTTPURLResponse, for task: URLSessionTask) {
+        guard isCurrentTask(task) else { return }
+        VILogger.debug("[VIPushAudioSource] handleResponse: status=\(response.statusCode) contentLength=\(String(describing: contentLength)) headers=\(response.allHeaderFields["Content-Range"] ?? "nil")")
+
+        // Detect servers that ignore the Range header and return 200 with full body
+        if response.statusCode == 200 &&
+           response.value(forHTTPHeaderField: "Content-Range") == nil {
+            rangeNotSupported = true
+            currentOffset = 0
+            VILogger.warning("[VIPushAudioSource] Server does not support Range requests, falling back to full download")
+        }
+
         if contentLength == nil {
             var totalLength: Int64?
             if let contentRange = response.value(forHTTPHeaderField: "Content-Range"),
@@ -305,9 +333,11 @@ public final class VIPushAudioSource: @unchecked Sendable {
             }
             if totalLength == nil {
                 let cl = response.expectedContentLength
-                if cl > 0 { totalLength = cl + currentOffset }
+                if cl > 0 {
+                    totalLength = rangeNotSupported ? cl : cl + currentOffset
+                }
             }
-            debugPrint("[VIPushAudioSource] handleResponse: resolved totalLength=\(String(describing: totalLength))")
+            VILogger.debug("[VIPushAudioSource] handleResponse: resolved totalLength=\(String(describing: totalLength))")
             if let total = totalLength {
                 contentLength = total
                 let unit = cacheManager.unit(for: url)
@@ -322,35 +352,64 @@ public final class VIPushAudioSource: @unchecked Sendable {
     }
 
     private var handleDataCallCount = 0
-    fileprivate func handleData(_ data: Data) {
-        guard !isClosed else { return }
+    fileprivate func handleData(_ data: Data, for task: URLSessionTask) {
+        guard !isClosed, isCurrentTask(task) else { return }
 
         // Write to cache
         if let handle = writeHandle {
-            try? handle.write(contentsOf: data)
-            segmentWrittenBytes += Int64(data.count)
-            if let idx = segmentIndex {
-                let unit = cacheManager.unit(for: url)
-                unit.updateSegmentLength(at: idx, length: segmentWrittenBytes)
+            do {
+                try handle.write(contentsOf: data)
+                segmentWrittenBytes += Int64(data.count)
+                if let idx = segmentIndex {
+                    let unit = cacheManager.unit(for: url)
+                    unit.updateSegmentLength(at: idx, length: segmentWrittenBytes)
+                }
+            } catch {
+                VILogger.debug("[VIPushAudioSource] cache write failed: \(error), disabling cache for this segment")
+                closeWriteHandle()
             }
         }
 
         handleDataCallCount += 1
         if handleDataCallCount <= 3 || handleDataCallCount % 100 == 0 {
-            debugPrint("[VIPushAudioSource] handleData #\(handleDataCallCount): \(data.count) bytes, currentOffset=\(currentOffset + Int64(data.count))")
+            VILogger.debug("[VIPushAudioSource] handleData #\(handleDataCallCount): \(data.count) bytes, currentOffset=\(currentOffset + Int64(data.count))")
         }
 
         currentOffset += Int64(data.count)
         onDataReceived?(data)
     }
 
-    fileprivate func handleComplete(error: Error?) {
+    fileprivate func handleHTTPError(statusCode: Int, for task: URLSessionTask) {
+        guard isCurrentTask(task) else { return }
+        VILogger.debug("[VIPushAudioSource] HTTP error: status \(statusCode)")
+        closeWriteHandle()
+        lock.lock()
+        activeDataTask?.cancel()
+        activeDataTask = nil
+        lock.unlock()
+
+        guard !isClosed else { return }
+
+        if statusCode == 416 {
+            // Range Not Satisfiable — treat as end of file
+            onEndOfFile?()
+        } else if statusCode >= 500 {
+            scheduleRetry()
+        } else {
+            onError?(VIDownloadError.httpError(statusCode: statusCode))
+        }
+    }
+
+    fileprivate func handleComplete(error: Error?, for task: URLSessionTask) {
+        // Ignore completions from stale (cancelled) tasks — their callbacks
+        // must not touch the writeHandle or activeDataTask of the new request.
+        guard isCurrentTask(task) else { return }
+
         closeWriteHandle()
         cacheManager.scheduleSave()
-
-        session?.invalidateAndCancel()
-        session = nil
+        lock.lock()
         activeDataTask = nil
+        lock.unlock()
 
         guard !isClosed else { return }
 
@@ -358,12 +417,22 @@ public final class VIPushAudioSource: @unchecked Sendable {
             let nsError = error as NSError
             if nsError.code == NSURLErrorCancelled { return }
 
-            debugPrint("[VIPushAudioSource] download error: \(error.localizedDescription)")
+            VILogger.debug("[VIPushAudioSource] download error: \(error.localizedDescription)")
 
             if nsError.code == NSURLErrorNotConnectedToInternet ||
                nsError.code == NSURLErrorNetworkConnectionLost ||
                nsError.code == NSURLErrorDataNotAllowed {
                 isWaitingForNetwork = true
+                // Guard against race: if network recovered between the error
+                // and setting the flag, retry immediately.
+                if networkAvailable {
+                    workQueue.async { [weak self] in
+                        guard let self, !self.isClosed, self.isWaitingForNetwork else { return }
+                        self.isWaitingForNetwork = false
+                        self.retryCount = 0
+                        self.startNetworkRequest(from: self.currentOffset)
+                    }
+                }
             } else {
                 scheduleRetry()
             }
@@ -392,7 +461,7 @@ public final class VIPushAudioSource: @unchecked Sendable {
         }
         retryCount += 1
         let delay = min(pow(2.0, Double(retryCount - 1)), 30.0)
-        debugPrint("[VIPushAudioSource] retry #\(retryCount) in \(delay)s from offset \(currentOffset)")
+        VILogger.debug("[VIPushAudioSource] retry #\(retryCount) in \(delay)s from offset \(currentOffset)")
 
         let item = DispatchWorkItem { [weak self] in
             guard let self, !self.isClosed else { return }
@@ -413,7 +482,7 @@ public final class VIPushAudioSource: @unchecked Sendable {
             self.networkAvailable = available
 
             if available && (wasUnavailable || self.isWaitingForNetwork) {
-                debugPrint("[VIPushAudioSource] network recovered, resuming from offset \(self.currentOffset)")
+                VILogger.debug("[VIPushAudioSource] network recovered, resuming from offset \(self.currentOffset)")
                 self.workQueue.async {
                     guard !self.isClosed, self.isWaitingForNetwork else { return }
                     self.isWaitingForNetwork = false
@@ -428,10 +497,11 @@ public final class VIPushAudioSource: @unchecked Sendable {
     // MARK: - Helpers
 
     private func cancelActiveDownload() {
-        activeDataTask?.cancel()
+        lock.lock()
+        let task = activeDataTask
         activeDataTask = nil
-        session?.invalidateAndCancel()
-        session = nil
+        lock.unlock()
+        task?.cancel()
         closeWriteHandle()
     }
 }
@@ -439,14 +509,7 @@ public final class VIPushAudioSource: @unchecked Sendable {
 // MARK: - URLSession delegate
 
 private final class StreamSessionDelegate: NSObject, URLSessionDataDelegate {
-    private weak var source: VIPushAudioSource?
-    private let startOffset: Int64
-    private var responseReceived = false
-
-    init(source: VIPushAudioSource, startOffset: Int64) {
-        self.source = source
-        self.startOffset = startOffset
-    }
+    weak var source: VIPushAudioSource?
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
                     didReceive response: URLResponse,
@@ -455,20 +518,20 @@ private final class StreamSessionDelegate: NSObject, URLSessionDataDelegate {
             completionHandler(.cancel)
             return
         }
-        guard (200...299).contains(http.statusCode) || http.statusCode == 206 else {
+        guard (200...299).contains(http.statusCode) else {
+            source?.handleHTTPError(statusCode: http.statusCode, for: dataTask)
             completionHandler(.cancel)
             return
         }
-        responseReceived = true
-        source?.handleResponse(http)
+        source?.handleResponse(http, for: dataTask)
         completionHandler(.allow)
     }
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        source?.handleData(data)
+        source?.handleData(data, for: dataTask)
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        source?.handleComplete(error: error)
+        source?.handleComplete(error: error, for: task)
     }
 }

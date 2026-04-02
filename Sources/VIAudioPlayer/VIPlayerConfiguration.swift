@@ -16,9 +16,6 @@ public struct VIPlayerConfiguration: Sendable {
     /// Number of audio frames per decode buffer.
     public var framesPerBuffer: UInt32
 
-    /// Minimum decoded duration (seconds) required before playback can start.
-    public var minimumBufferDuration: TimeInterval
-
     /// Interval for time-progress callbacks (seconds).
     public var timeUpdateInterval: TimeInterval
 
@@ -38,7 +35,6 @@ public struct VIPlayerConfiguration: Sendable {
         downloaderConfiguration: VIDownloaderConfiguration = VIDownloaderConfiguration(),
         decodeBufferCount: Int = 8,
         framesPerBuffer: UInt32 = 8192,
-        minimumBufferDuration: TimeInterval = 0.5,
         timeUpdateInterval: TimeInterval = 0.05,
         secondsRequiredToStartPlaying: TimeInterval = 1.0,
         secondsRequiredAfterSeek: TimeInterval = 0.5,
@@ -47,7 +43,6 @@ public struct VIPlayerConfiguration: Sendable {
         self.downloaderConfiguration = downloaderConfiguration
         self.decodeBufferCount = decodeBufferCount
         self.framesPerBuffer = framesPerBuffer
-        self.minimumBufferDuration = minimumBufferDuration
         self.timeUpdateInterval = timeUpdateInterval
         self.secondsRequiredToStartPlaying = secondsRequiredToStartPlaying
         self.secondsRequiredAfterSeek = secondsRequiredAfterSeek

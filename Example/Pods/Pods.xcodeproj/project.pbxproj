@@ -32,6 +32,8 @@
 		D068F4EA527718B7E4073AE957236983 /* VIAudioRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 315CA2671D779C480993AC1F376ABDCF /* VIAudioRenderer.swift */; };
 		D69E59B8BA97B3A7E7013E185CEDE16D /* VICacheUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90378FBC99D9012C8E77D56E3ABFE812 /* VICacheUnit.swift */; };
 		D7AD9E18D2B070EADFAE661669A96DE5 /* VIDownloadTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC8A97E347CCEF4A60B1F0712DD41DE /* VIDownloadTask.swift */; };
+		E0EA60092F7D0A0A00EC00B1 /* VIStreamDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0EA60082F7D0A0A00EC00B1 /* VIStreamDecoding.swift */; };
+		E0EA600B2F7D0A2600EC00B1 /* VILogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0EA600A2F7D0A2600EC00B1 /* VILogger.swift */; };
 		E847CC3AA88C29EF772F217F3E35297D /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0B49324E59B027D63B24AC1523AD32 /* AudioToolbox.framework */; };
 		EE6D0D0AA6E55EA87B7671C0F18A6A56 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F238174EDDD7A06325BC0F6A792BCBFD /* AVFoundation.framework */; };
 		F3BB10A24260EFAB30E30CDABBC70BEA /* VINetworkAudioSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DA7BCD75E19B52D5E73CE364FCF1EF /* VINetworkAudioSource.swift */; };
@@ -69,28 +71,30 @@
 		62E643F3192D9724057FFAF679449711 /* VIAudioKit-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "VIAudioKit-Info.plist"; sourceTree = "<group>"; };
 		6F0B49324E59B027D63B24AC1523AD32 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/AudioToolbox.framework; sourceTree = DEVELOPER_DIR; };
 		7E38117847963C124C60D67F231B3B5E /* VIChunkedDownloader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIChunkedDownloader.swift; sourceTree = "<group>"; };
-		8504B5641AA7B7B7D939BD296F7D2EA3 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		8504B5641AA7B7B7D939BD296F7D2EA3 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		891ADA89CA8677B661069BA734D30858 /* VIAudioKit-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "VIAudioKit-umbrella.h"; sourceTree = "<group>"; };
-		8E6BF21332CE62542E32A24F5E8D6F61 /* Pods-VIAudioKitDemo */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-VIAudioKitDemo"; path = Pods_VIAudioKitDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8E6BF21332CE62542E32A24F5E8D6F61 /* Pods_VIAudioKitDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_VIAudioKitDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		90378FBC99D9012C8E77D56E3ABFE812 /* VICacheUnit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheUnit.swift; sourceTree = "<group>"; };
 		9C9760D4C723901BCB00BC71922A135C /* VIAudioDecoding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioDecoding.swift; sourceTree = "<group>"; };
 		9D7D8995DECBBDB4293F4EE7E82F6709 /* VIPlayerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIPlayerState.swift; sourceTree = "<group>"; };
-		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		A7E043917B99827C6C0666A797AF2DA5 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Network.framework; sourceTree = DEVELOPER_DIR; };
 		A883F9B9F8C29F103002129942E30BBE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		AC33A9D61D5F9BC3F94916FCB153DF9B /* VIDownloaderConfiguration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIDownloaderConfiguration.swift; sourceTree = "<group>"; };
 		B17CEFC7CE356DDBFF7787BFB9BF4561 /* Pods-VIAudioKitDemo-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-VIAudioKitDemo-acknowledgements.markdown"; sourceTree = "<group>"; };
 		BAD5661CE36437286695FDC11810FC77 /* VIAudioKit.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = VIAudioKit.modulemap; sourceTree = "<group>"; };
 		BBBD323DC1F1BDBB051984DDC8C6A0A0 /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
-		BE4EB7088BDE5F3B571F57049F667ABC /* VIAudioKit */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = VIAudioKit; path = VIAudioKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE4EB7088BDE5F3B571F57049F667ABC /* VIAudioKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = VIAudioKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C8813EBA8721C4D104E25364DC814956 /* Pods-VIAudioKitDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-VIAudioKitDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		CB785959E57FCC252A4F16450ACBF808 /* VIAudioPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioPlayer.swift; sourceTree = "<group>"; };
 		CCF198EA102B280CDF14AEC259464983 /* Pods-VIAudioKitDemo-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-VIAudioKitDemo-frameworks.sh"; sourceTree = "<group>"; };
 		D146A03F9A9A53A287132AED8E821CBD /* VICacheSegment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheSegment.swift; sourceTree = "<group>"; };
 		D5D54373725CD6D23619C96DA0CE56F4 /* VILocalFileSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VILocalFileSource.swift; sourceTree = "<group>"; };
-		D79CEA821F58592EED0964140EA85851 /* VIAudioKit.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = VIAudioKit.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		D79CEA821F58592EED0964140EA85851 /* VIAudioKit.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = VIAudioKit.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		DA187A62E5DFA5B27A5DD970D44E2473 /* VICacheManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheManager.swift; sourceTree = "<group>"; };
 		DF7089FE28EA099D69E08D344EF8089F /* Pods-VIAudioKitDemo.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-VIAudioKitDemo.modulemap"; sourceTree = "<group>"; };
+		E0EA60082F7D0A0A00EC00B1 /* VIStreamDecoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VIStreamDecoding.swift; sourceTree = "<group>"; };
+		E0EA600A2F7D0A2600EC00B1 /* VILogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VILogger.swift; sourceTree = "<group>"; };
 		E2DA7BCD75E19B52D5E73CE364FCF1EF /* VINetworkAudioSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VINetworkAudioSource.swift; sourceTree = "<group>"; };
 		E52F1DCE7B5E84420028E20FFEAD1E0B /* VIAudioKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = VIAudioKit.debug.xcconfig; sourceTree = "<group>"; };
 		F238174EDDD7A06325BC0F6A792BCBFD /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/AVFoundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -162,6 +166,7 @@
 				E2DA7BCD75E19B52D5E73CE364FCF1EF /* VINetworkAudioSource.swift */,
 				33157964D367132DC91F8CE80EA03C2F /* VIPushAudioSource.swift */,
 				30B71CF0B73EEF738FEA8E7A83F20D4A /* VIStreamDecoder.swift */,
+				E0EA60082F7D0A0A00EC00B1 /* VIStreamDecoding.swift */,
 			);
 			name = VIAudioDecoder;
 			path = Sources/VIAudioDecoder;
@@ -187,8 +192,8 @@
 		406D689B0A771AC57A28A5D30D407C7D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8E6BF21332CE62542E32A24F5E8D6F61 /* Pods-VIAudioKitDemo */,
-				BE4EB7088BDE5F3B571F57049F667ABC /* VIAudioKit */,
+				8E6BF21332CE62542E32A24F5E8D6F61 /* Pods_VIAudioKitDemo.framework */,
+				BE4EB7088BDE5F3B571F57049F667ABC /* VIAudioKit.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -271,6 +276,7 @@
 				AC33A9D61D5F9BC3F94916FCB153DF9B /* VIDownloaderConfiguration.swift */,
 				3DC8A97E347CCEF4A60B1F0712DD41DE /* VIDownloadTask.swift */,
 				1AFF0885576897394543A1F24013DD02 /* VIRangeRequest.swift */,
+				E0EA600A2F7D0A2600EC00B1 /* VILogger.swift */,
 			);
 			name = VIAudioDownloader;
 			path = Sources/VIAudioDownloader;
@@ -313,7 +319,7 @@
 			);
 			name = VIAudioKit;
 			productName = VIAudioKit;
-			productReference = BE4EB7088BDE5F3B571F57049F667ABC /* VIAudioKit */;
+			productReference = BE4EB7088BDE5F3B571F57049F667ABC /* VIAudioKit.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		D28E0AA1D765B7051975D2566BA15F44 /* Pods-VIAudioKitDemo */ = {
@@ -332,7 +338,7 @@
 			);
 			name = "Pods-VIAudioKitDemo";
 			productName = Pods_VIAudioKitDemo;
-			productReference = 8E6BF21332CE62542E32A24F5E8D6F61 /* Pods-VIAudioKitDemo */;
+			productReference = 8E6BF21332CE62542E32A24F5E8D6F61 /* Pods_VIAudioKitDemo.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -353,8 +359,6 @@
 				en,
 			);
 			mainGroup = CF1408CF629C7361332E53B88F7BD30C;
-			minimizedProjectReferenceProxies = 0;
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 406D689B0A771AC57A28A5D30D407C7D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -398,6 +402,7 @@
 				FE6E9DFB6E48934481D2B534AC8844B4 /* VIAudioBufferQueue.swift in Sources */,
 				B320E1304E2EA457E3F792624086EF5F /* VIAudioDecoding.swift in Sources */,
 				78D0980117D21D3BA328356F189A96A7 /* VIAudioKit-dummy.m in Sources */,
+				E0EA60092F7D0A0A00EC00B1 /* VIStreamDecoding.swift in Sources */,
 				1B5AE2C9CE2A95F0B74A16D227909D1F /* VIAudioPlayer.swift in Sources */,
 				D068F4EA527718B7E4073AE957236983 /* VIAudioRenderer.swift in Sources */,
 				7F785D6B779D806715F40131D0244283 /* VIAudioSource.swift in Sources */,
@@ -410,6 +415,7 @@
 				D7AD9E18D2B070EADFAE661669A96DE5 /* VIDownloadTask.swift in Sources */,
 				388743BC34274666CC7C19EAF56E12AF /* VILocalFileSource.swift in Sources */,
 				2522ED6A9CBB506E92E29F6132C99767 /* VINativeDecoder.swift in Sources */,
+				E0EA600B2F7D0A2600EC00B1 /* VILogger.swift in Sources */,
 				F3BB10A24260EFAB30E30CDABBC70BEA /* VINetworkAudioSource.swift in Sources */,
 				617A17E9C005C29EA22F42008564E5F1 /* VIPlayerConfiguration.swift in Sources */,
 				AC780A6C1C8FE6AB5E1274BF9857E476 /* VIPlayerState.swift in Sources */,

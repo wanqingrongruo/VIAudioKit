@@ -1,5 +1,8 @@
 import AVFoundation
 import AudioToolbox
+#if !COCOAPODS
+import VIAudioDownloader
+#endif
 
 /// Decoder for Apple-natively-supported formats using ExtAudioFile.
 /// Supports mp3, aac, m4a, flac, alac, wav, aiff, caf.
@@ -30,11 +33,11 @@ public final class VINativeDecoder: VIAudioDecoding {
             throw VIDecoderError.unsupportedFormat("VINativeDecoder only supports local files. Use VIStreamDecoder for network sources.")
         }
 
-        debugPrint("[VINativeDecoder] Opening: \(source.url.path)")
+        VILogger.debug("[VINativeDecoder] Opening: \(source.url.path)")
         var extFile: ExtAudioFileRef?
         let openStatus = ExtAudioFileOpenURL(source.url as CFURL, &extFile)
         guard openStatus == noErr, extFile != nil else {
-            debugPrint("[VINativeDecoder] ExtAudioFileOpenURL failed: \(openStatus)")
+            VILogger.debug("[VINativeDecoder] ExtAudioFileOpenURL failed: \(openStatus)")
             throw VIDecoderError.fileOpenFailed(openStatus)
         }
         self.extAudioFile = extFile
@@ -43,19 +46,19 @@ public final class VINativeDecoder: VIAudioDecoding {
         var propSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
         let fmtStatus = ExtAudioFileGetProperty(extFile!, kExtAudioFileProperty_FileDataFormat, &propSize, &srcFormat)
         guard fmtStatus == noErr else {
-            debugPrint("[VINativeDecoder] Failed to read source format: \(fmtStatus)")
+            VILogger.debug("[VINativeDecoder] Failed to read source format: \(fmtStatus)")
             ExtAudioFileDispose(extFile!)
             throw VIDecoderError.fileOpenFailed(fmtStatus)
         }
 
         guard srcFormat.mSampleRate > 0, srcFormat.mChannelsPerFrame > 0 else {
-            debugPrint("[VINativeDecoder] Invalid source format: rate=\(srcFormat.mSampleRate) ch=\(srcFormat.mChannelsPerFrame)")
+            VILogger.debug("[VINativeDecoder] Invalid source format: rate=\(srcFormat.mSampleRate) ch=\(srcFormat.mChannelsPerFrame)")
             ExtAudioFileDispose(extFile!)
             throw VIDecoderError.unsupportedFormat("Invalid source format")
         }
 
         self.sampleRate = srcFormat.mSampleRate
-        debugPrint("[VINativeDecoder] Source: rate=\(sampleRate) ch=\(srcFormat.mChannelsPerFrame) bitsPerCh=\(srcFormat.mBitsPerChannel)")
+        VILogger.debug("[VINativeDecoder] Source: rate=\(sampleRate) ch=\(srcFormat.mChannelsPerFrame) bitsPerCh=\(srcFormat.mBitsPerChannel)")
 
         let channels = srcFormat.mChannelsPerFrame
         guard let outFmt = AVAudioFormat(
@@ -77,7 +80,7 @@ public final class VINativeDecoder: VIAudioDecoding {
             &clientDesc
         )
         guard setStatus == noErr else {
-            debugPrint("[VINativeDecoder] Failed to set client format: \(setStatus)")
+            VILogger.debug("[VINativeDecoder] Failed to set client format: \(setStatus)")
             ExtAudioFileDispose(extFile!)
             throw VIDecoderError.decodeFailed(setStatus)
         }
@@ -86,13 +89,13 @@ public final class VINativeDecoder: VIAudioDecoding {
         var frameCountSize = UInt32(MemoryLayout<Int64>.size)
         let lenStatus = ExtAudioFileGetProperty(extFile!, kExtAudioFileProperty_FileLengthFrames, &frameCountSize, &frameCount)
         if lenStatus != noErr {
-            debugPrint("[VINativeDecoder] Warning: cannot read total frames: \(lenStatus)")
+            VILogger.debug("[VINativeDecoder] Warning: cannot read total frames: \(lenStatus)")
         }
 
         self.totalFrames = frameCount
         self.duration = sampleRate > 0 ? Double(frameCount) / sampleRate : 0
 
-        debugPrint("[VINativeDecoder] Ready: totalFrames=\(totalFrames) duration=\(String(format: "%.2f", duration))s")
+        VILogger.debug("[VINativeDecoder] Ready: totalFrames=\(totalFrames) duration=\(String(format: "%.2f", duration))s")
     }
 
     // MARK: - Decode
@@ -110,7 +113,7 @@ public final class VINativeDecoder: VIAudioDecoding {
         var frameCount = buffer.frameCapacity
         let status = ExtAudioFileRead(audioFile, &frameCount, ablPtr)
         guard status == noErr else {
-            debugPrint("[VINativeDecoder] ExtAudioFileRead error: \(status)")
+            VILogger.debug("[VINativeDecoder] ExtAudioFileRead error: \(status)")
             throw VIDecoderError.decodeFailed(status)
         }
 
@@ -118,7 +121,7 @@ public final class VINativeDecoder: VIAudioDecoding {
         decodeCallCount += 1
 
         if decodeCallCount <= 3 || frameCount == 0 {
-            debugPrint("[VINativeDecoder] decode #\(decodeCallCount): frames=\(frameCount) capacity=\(buffer.frameCapacity)")
+            VILogger.debug("[VINativeDecoder] decode #\(decodeCallCount): frames=\(frameCount) capacity=\(buffer.frameCapacity)")
         }
 
         if frameCount == 0 {

@@ -1,4 +1,8 @@
 import AVFoundation
+import os
+#if !COCOAPODS
+import VIAudioDownloader
+#endif
 
 /// Callback when the renderer needs more data scheduled.
 public typealias VIRendererNeedsDataHandler = () -> Void
@@ -13,21 +17,30 @@ public final class VIAudioRenderer: @unchecked Sendable {
 
     private var scheduledFormat: AVAudioFormat?
     private var _rate: Float = 1.0
-    private let lock = NSLock()
+    /// Uses os_unfair_lock for the hot path (scheduleBuffer completion on audio render thread)
+    /// to avoid priority inversion that NSLock can cause.
+    private var _lock = os_unfair_lock()
+    /// Separate NSLock for prepare/teardown (longer critical sections where os_unfair_lock is inappropriate).
+    private let engineLock = NSLock()
     private var isEngineRunning = false
     private var nodesAttached = false
     private var _isPrepared = false
+    private var isAudioSessionConfigured = false
 
     /// Whether the renderer has been prepared with a format and the engine is running.
     public var isPrepared: Bool {
-        lock.lock()
-        defer { lock.unlock() }
+        engineLock.lock()
+        defer { engineLock.unlock() }
         return _isPrepared && isEngineRunning
     }
 
     /// Called on the render thread when the player node finishes a buffer
     /// and may need more data.
     public var onNeedsData: VIRendererNeedsDataHandler?
+
+    /// Called when an audio session interruption begins or ends.
+    /// `true` = interruption began (paused), `false` = interruption ended (may resume).
+    public var onInterruption: ((_ began: Bool) -> Void)?
 
     /// Number of buffers currently scheduled in the player node.
     public private(set) var scheduledBufferCount: Int = 0
@@ -36,14 +49,14 @@ public final class VIAudioRenderer: @unchecked Sendable {
 
     public var rate: Float {
         get {
-            lock.lock()
-            defer { lock.unlock() }
+            os_unfair_lock_lock(&_lock)
+            defer { os_unfair_lock_unlock(&_lock) }
             return _rate
         }
         set {
-            lock.lock()
+            os_unfair_lock_lock(&_lock)
             _rate = newValue
-            lock.unlock()
+            os_unfair_lock_unlock(&_lock)
             timePitchNode.rate = newValue
         }
     }
@@ -53,8 +66,8 @@ public final class VIAudioRenderer: @unchecked Sendable {
     /// Prepare the engine graph for the given format.
     /// Safe to call multiple times — skips if already prepared with the same format.
     public func prepare(format: AVAudioFormat) throws {
-        lock.lock()
-        defer { lock.unlock() }
+        engineLock.lock()
+        defer { engineLock.unlock() }
 
         if _isPrepared, isEngineRunning, scheduledFormat == format {
             return
@@ -86,16 +99,16 @@ public final class VIAudioRenderer: @unchecked Sendable {
 
     /// Schedule a PCM buffer for playback.
     public func scheduleBuffer(_ buffer: AVAudioPCMBuffer) {
-        lock.lock()
+        os_unfair_lock_lock(&_lock)
         scheduledBufferCount += 1
-        lock.unlock()
+        os_unfair_lock_unlock(&_lock)
 
         playerNode.scheduleBuffer(buffer) { [weak self] in
             guard let self else { return }
-            self.lock.lock()
+            os_unfair_lock_lock(&self._lock)
             self.scheduledBufferCount -= 1
             let count = self.scheduledBufferCount
-            self.lock.unlock()
+            os_unfair_lock_unlock(&self._lock)
 
             if count <= 2 {
                 self.onNeedsData?()
@@ -105,10 +118,10 @@ public final class VIAudioRenderer: @unchecked Sendable {
 
     // MARK: - Playback control
 
-    public func play() {
-        configureAudioSession()
+    public func play() throws {
+        configureAudioSessionIfNeeded()
         if !isEngineRunning {
-            try? engine.start()
+            try engine.start()
             isEngineRunning = true
         }
         playerNode.play()
@@ -120,9 +133,9 @@ public final class VIAudioRenderer: @unchecked Sendable {
 
     public func stop() {
         playerNode.stop()
-        lock.lock()
+        os_unfair_lock_lock(&_lock)
         scheduledBufferCount = 0
-        lock.unlock()
+        os_unfair_lock_unlock(&_lock)
     }
 
     /// Current playback time based on the player node's sample time.
@@ -143,7 +156,7 @@ public final class VIAudioRenderer: @unchecked Sendable {
     // MARK: - Teardown
 
     public func teardown() {
-        lock.lock()
+        engineLock.lock()
         playerNode.stop()
         if isEngineRunning {
             engine.stop()
@@ -154,22 +167,84 @@ public final class VIAudioRenderer: @unchecked Sendable {
             engine.detach(playerNode)
             nodesAttached = false
         }
+        os_unfair_lock_lock(&_lock)
         scheduledBufferCount = 0
+        os_unfair_lock_unlock(&_lock)
         scheduledFormat = nil
         _isPrepared = false
-        lock.unlock()
+        engineLock.unlock()
     }
 
-    // MARK: - Audio session (iOS only)
+    // MARK: - Audio session (iOS / tvOS)
 
-    private func configureAudioSession() {
+    private var interruptionObserver: NSObjectProtocol?
+
+    private func configureAudioSessionIfNeeded() {
         #if os(iOS) || os(tvOS)
+        guard !isAudioSessionConfigured else { return }
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default, options: [])
             try session.setActive(true)
+            isAudioSessionConfigured = true
         } catch {
-            debugPrint("[VIAudioRenderer] AudioSession configuration failed: \(error)")
+            VILogger.debug("[VIAudioRenderer] AudioSession configuration failed: \(error)")
+        }
+        registerInterruptionObserver()
+        #endif
+    }
+
+    private func registerInterruptionObserver() {
+        #if os(iOS) || os(tvOS)
+        guard interruptionObserver == nil else { return }
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: nil
+        ) { [weak self] notification in
+            self?.handleInterruption(notification)
+        }
+        #endif
+    }
+
+    private func handleInterruption(_ notification: Notification) {
+        #if os(iOS) || os(tvOS)
+        guard let info = notification.userInfo,
+              let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+
+        switch type {
+        case .began:
+            VILogger.debug("[VIAudioRenderer] Audio session interruption began")
+            playerNode.pause()
+            onInterruption?(true)
+
+        case .ended:
+            VILogger.debug("[VIAudioRenderer] Audio session interruption ended")
+            let shouldResume: Bool
+            if let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt {
+                shouldResume = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                    .contains(.shouldResume)
+            } else {
+                shouldResume = false
+            }
+
+            if shouldResume {
+                do {
+                    try AVAudioSession.sharedInstance().setActive(true)
+                    if !isEngineRunning {
+                        try engine.start()
+                        isEngineRunning = true
+                    }
+                    playerNode.play()
+                } catch {
+                    VILogger.error("[VIAudioRenderer] Failed to resume after interruption: \(error)")
+                }
+            }
+            onInterruption?(false)
+
+        @unknown default:
+            break
         }
         #endif
     }

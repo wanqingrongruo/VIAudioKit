@@ -70,8 +70,12 @@ public final class VICacheManager: @unchecked Sendable {
 
     /// Absolute file URL if the resource is completely cached.
     public func completeCacheURL(for url: URL) -> URL? {
-        guard let unit = existingUnit(for: url),
-              let rp = unit.completeSegmentRelativePath else { return nil }
+        guard let unit = existingUnit(for: url) else {
+            return nil
+        }
+        guard let rp = unit.completeSegmentRelativePath else {
+            return nil
+        }
         return directoryForUnit(unit.key).appendingPathComponent(rp)
     }
 
@@ -181,7 +185,7 @@ public final class VICacheManager: @unchecked Sendable {
             let data = try JSONEncoder().encode(snapshot)
             try data.write(to: indexFileURL, options: .atomic)
         } catch {
-            debugPrint("[VICacheManager] Failed to save index: \(error)")
+            VILogger.debug("[VICacheManager] Failed to save index: \(error)")
         }
     }
 
@@ -202,6 +206,7 @@ public final class VICacheManager: @unchecked Sendable {
                 }
             }
             if !validSegments.isEmpty || unit.totalLength != nil {
+                unit.replaceSegments(validSegments)
                 units[unit.key] = unit
             }
         }

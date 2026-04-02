@@ -17,8 +17,8 @@ public enum VIPlayerState: Sendable, Equatable {
              (.playing, .playing), (.paused, .paused), (.buffering, .buffering),
              (.finished, .finished):
             return true
-        case (.failed(let a), .failed(let b)):
-            return a.localizedDescription == b.localizedDescription
+        case (.failed, .failed):
+            return true
         default:
             return false
         }

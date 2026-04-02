@@ -1,5 +1,6 @@
 import UIKit
 import VIAudioKit
+import QuartzCore
 
 // MARK: - Audio Item
 
@@ -52,6 +53,7 @@ final class AudioPlayerDemoController: UIViewController {
 
     private let player = VIAudioPlayer()
     private var currentIndex: Int = -1
+    private var lastCacheUpdateTime: Date?
 
     // MARK: - UI Components
 
@@ -181,6 +183,7 @@ final class AudioPlayerDemoController: UIViewController {
     }()
 
     private var isScrubbing = false
+    private let cacheInfoQueue = DispatchQueue(label: "com.viaudiokit.demo.cacheinfo", qos: .utility)
 
     // MARK: - Lifecycle
 
@@ -402,12 +405,22 @@ final class AudioPlayerDemoController: UIViewController {
 
     private func loadAndPlay(index: Int) {
         guard index < audioItems.count else { return }
+        
+        let wasPlaying = player.isPlaying
+        
         currentIndex = index
         let item = audioItems[index]
         titleLabel.text = item.title
         bufferProgressView.progress = 0
         progressSlider.value = 0
+        currentTimeLabel.text = "00:00"
+        durationLabel.text = "00:00"
+        
         player.load(url: item.url)
+        
+        if wasPlaying {
+            player.play()
+        }
     }
 
     private func updatePlayPauseIcon(playing: Bool) {
@@ -426,23 +439,32 @@ final class AudioPlayerDemoController: UIViewController {
     private func updateCacheInfo() {
         guard currentIndex >= 0, currentIndex < audioItems.count else { return }
         let item = audioItems[currentIndex]
-        guard !item.isLocal else {
-            cacheLabel.text = "Cache: local file"
-            return
-        }
-        let status = player.cacheStatus(for: item.url)
-        switch status {
-        case .none:
-            cacheLabel.text = "Cache: none"
-        case .partial(let downloaded, let total, _):
-            let pct = total > 0 ? Int(Double(downloaded) / Double(total) * 100) : 0
-            let dlMB = String(format: "%.1f", Double(downloaded) / 1_048_576)
-            let totalMB = String(format: "%.1f", Double(total) / 1_048_576)
-            cacheLabel.text = "Cache: \(dlMB)MB / \(totalMB)MB (\(pct)%)"
-            bufferProgressView.setProgress(Float(pct) / 100.0, animated: true)
-        case .complete:
-            cacheLabel.text = "Cache: complete"
-            bufferProgressView.setProgress(1.0, animated: true)
+        cacheInfoQueue.async { [weak self] in
+            guard let self else { return }
+            if item.isLocal {
+                DispatchQueue.main.async {
+                    self.cacheLabel.text = "Cache: local file"
+                }
+                return
+            }
+
+            let status = self.player.cacheStatus(for: item.url)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                switch status {
+                case .none:
+                    self.cacheLabel.text = "Cache: none"
+                case .partial(let downloaded, let total, _):
+                    let pct = total > 0 ? Int(Double(downloaded) / Double(total) * 100) : 0
+                    let dlMB = String(format: "%.1f", Double(downloaded) / 1_048_576)
+                    let totalMB = String(format: "%.1f", Double(total) / 1_048_576)
+                    self.cacheLabel.text = "Cache: \(dlMB)MB / \(totalMB)MB (\(pct)%)"
+                    self.bufferProgressView.setProgress(Float(pct) / 100.0, animated: true)
+                case .complete:
+                    self.cacheLabel.text = "Cache: complete"
+                    self.bufferProgressView.setProgress(1.0, animated: true)
+                }
+            }
         }
     }
 
@@ -502,7 +524,7 @@ extension AudioPlayerDemoController: VIAudioPlayerDelegate {
             bufferingIndicator.stopAnimating()
             showErrorAlert(error)
         }
-        updateCacheInfo()
+        // Keep state transition lightweight on main thread; cache info refreshes asynchronously.
     }
 
     func player(_ player: VIAudioPlayer, didUpdateTime currentTime: TimeInterval, duration: TimeInterval) {
@@ -512,20 +534,18 @@ extension AudioPlayerDemoController: VIAudioPlayerDelegate {
         if duration > 0 {
             progressSlider.value = Float(currentTime / duration)
         }
+        
+        let now = Date()
+        if let last = lastCacheUpdateTime, now.timeIntervalSince(last) < 1.0 {
+            return
+        }
+        lastCacheUpdateTime = now
         updateCacheInfo()
     }
 
     func player(_ player: VIAudioPlayer, didUpdateBuffer state: VIBufferState) {
-        switch state {
-        case .empty:
-            bufferProgressView.progress = 0
-        case .buffering(let progress):
-            bufferProgressView.progress = progress
-        case .sufficient:
-            break
-        case .full:
-            bufferProgressView.progress = 1.0
-        }
+        // UI relies on updateCacheInfo() to update bufferProgressView with overall download progress,
+        // so we don't overwrite it with the 0-2s playback buffer state here.
     }
 
     func player(_ player: VIAudioPlayer, didReceiveError error: VIPlayerError) {

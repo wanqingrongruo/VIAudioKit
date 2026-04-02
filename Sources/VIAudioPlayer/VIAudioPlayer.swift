@@ -82,7 +82,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
     private var source: VIAudioSource?
 
     // Push-mode (network files)
-    private var streamDecoder: VIStreamDecoder?
+    private var streamDecoder: VIStreamDecoding?
     private var pushSource: VIPushAudioSource?
     private var isNetworkMode = false
     private var networkFileExt: String = ""
@@ -113,10 +113,17 @@ public final class VIAudioPlayer: @unchecked Sendable {
     private var timeUpdateTimer: DispatchSourceTimer?
     private let decodeQueue = DispatchQueue(label: "com.viaudiokit.decode", qos: .userInitiated)
     private let pushQueue = DispatchQueue(label: "com.viaudiokit.push", qos: .userInitiated)
-    private let lock = NSLock()
+    private let renderControlQueue = DispatchQueue(label: "com.viaudiokit.render.control", qos: .userInitiated)
+    /// Serial queue protecting all mutable state that is read/written across threads
+    /// (generation counters, isSeeking, networkBufferedDuration, etc.).
+    private let stateQueue = DispatchQueue(label: "com.viaudiokit.player.state")
 
-    /// Registry of decoder types. Add custom decoders here.
+    /// Registry of pull-mode decoder types. Add custom decoders here.
     public var decoderTypes: [VIAudioDecoding.Type] = [VINativeDecoder.self]
+
+    /// Factory for creating push-mode (stream) decoders. Override to provide a custom
+    /// `VIStreamDecoding` implementation instead of the default `VIStreamDecoder`.
+    public var streamDecoderFactory: () -> VIStreamDecoding = { VIStreamDecoder() }
 
     // MARK: - Init
 
@@ -124,10 +131,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
         self.configuration = configuration
         self.downloader = VIChunkedDownloader(configuration: configuration.downloaderConfiguration)
         self.bufferQueue = VIAudioBufferQueue(capacity: configuration.decodeBufferCount)
-
-        renderer.onNeedsData = { [weak self] in
-            self?.feedRenderer()
-        }
+        setupRendererCallbacks()
     }
 
     public init(configuration: VIPlayerConfiguration = VIPlayerConfiguration(),
@@ -135,9 +139,22 @@ public final class VIAudioPlayer: @unchecked Sendable {
         self.configuration = configuration
         self.downloader = downloader
         self.bufferQueue = VIAudioBufferQueue(capacity: configuration.decodeBufferCount)
+        setupRendererCallbacks()
+    }
 
+    private func setupRendererCallbacks() {
         renderer.onNeedsData = { [weak self] in
             self?.feedRenderer()
+        }
+        renderer.onInterruption = { [weak self] began in
+            guard let self else { return }
+            if began {
+                if self.state == .playing {
+                    self.playWhenReady = true
+                    self.state = .paused
+                    self.stopTimeUpdates()
+                }
+            }
         }
     }
 
@@ -156,21 +173,21 @@ public final class VIAudioPlayer: @unchecked Sendable {
         streamEndReached = false
         networkBufferedDuration = 0
 
-        lock.lock()
-        loadGeneration += 1
-        let thisLoad = loadGeneration
-        lock.unlock()
+        let thisLoad: Int = stateQueue.sync {
+            loadGeneration += 1
+            return loadGeneration
+        }
 
         state = .preparing
 
-        debugPrint("[VIAudioPlayer] load: \(url.lastPathComponent) isFile=\(url.isFileURL)")
+        VILogger.debug("[VIAudioPlayer] load: \(url.lastPathComponent) isFile=\(url.isFileURL)")
 
         if url.isFileURL {
             isNetworkMode = false
             loadLocalFile(url: url, extensionHint: nil, thisLoad: thisLoad)
         } else {
             if let cachedURL = downloader.completeCacheURL(for: url) {
-                debugPrint("[VIAudioPlayer] load: fully cached, using local file path")
+                VILogger.debug("[VIAudioPlayer] load: fully cached, using local file path")
                 isNetworkMode = false
                 let originalExt = url.pathExtension.lowercased()
                 loadLocalFile(url: cachedURL, extensionHint: originalExt, thisLoad: thisLoad)
@@ -189,11 +206,9 @@ public final class VIAudioPlayer: @unchecked Sendable {
         decodeQueue.async { [weak self] in
             guard let self else { return }
 
-            self.lock.lock()
-            let stale = thisLoad != self.loadGeneration
-            self.lock.unlock()
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
             guard !stale else {
-                debugPrint("[VIAudioPlayer] load: stale (generation \(thisLoad)), skipping")
+                VILogger.debug("[VIAudioPlayer] load: stale (generation \(thisLoad)), skipping")
                 return
             }
 
@@ -202,7 +217,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
                 self.source = source
 
                 let ext = (extensionHint?.isEmpty == false) ? extensionHint! : source.fileExtension
-                debugPrint("[VIAudioPlayer] load: ext=\(ext) size=\(source.contentLength ?? -1)")
+                VILogger.debug("[VIAudioPlayer] load: ext=\(ext) size=\(source.contentLength ?? -1)")
 
                 guard let decoderType = self.decoderTypes.first(where: {
                     $0.supportedExtensions.contains(ext)
@@ -214,29 +229,33 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
                 let decoder = try decoderType.init(source: source)
 
-                self.lock.lock()
-                let staleAfterDecode = thisLoad != self.loadGeneration
-                self.lock.unlock()
+                let staleAfterDecode: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
                 if staleAfterDecode {
                     decoder.close()
-                    debugPrint("[VIAudioPlayer] load: stale after decode init, skipping")
+                    VILogger.debug("[VIAudioPlayer] load: stale after decode init, skipping")
                     return
                 }
 
                 self.decoder = decoder
                 self.duration = decoder.duration
 
-                debugPrint("[VIAudioPlayer] load: decoder ready, duration=\(String(format: "%.2f", decoder.duration))s")
+                VILogger.debug("[VIAudioPlayer] load: decoder ready, duration=\(String(format: "%.2f", decoder.duration))s")
                 try self.renderer.prepare(format: decoder.outputFormat)
-                debugPrint("[VIAudioPlayer] load: renderer prepared, setting state=ready")
+                VILogger.debug("[VIAudioPlayer] load: renderer prepared, setting state=ready")
                 self.state = .ready
+                if self.playWhenReady {
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        let stillCurrent = self.stateQueue.sync { thisLoad == self.loadGeneration }
+                        guard stillCurrent else { return }
+                        self.play()
+                    }
+                }
             } catch {
-                self.lock.lock()
-                let stillCurrent = thisLoad == self.loadGeneration
-                self.lock.unlock()
+                let stillCurrent: Bool = self.stateQueue.sync { thisLoad == self.loadGeneration }
                 guard stillCurrent else { return }
 
-                debugPrint("[VIAudioPlayer] load failed: \(error)")
+                VILogger.debug("[VIAudioPlayer] load failed: \(error)")
                 let playerError = self.wrapError(error)
                 self.state = .failed(playerError)
                 DispatchQueue.main.async {
@@ -257,7 +276,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
             cacheManager: downloader.cacheManager,
             configuration: configuration.downloaderConfiguration
         )
-        let sd = VIStreamDecoder()
+        let sd = streamDecoderFactory()
         sd.framesPerBuffer = configuration.framesPerBuffer
 
         self.pushSource = ps
@@ -267,7 +286,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
         do {
             try sd.open(fileTypeHint: hint)
         } catch {
-            debugPrint("[VIAudioPlayer] load: stream decoder open failed: \(error)")
+            VILogger.debug("[VIAudioPlayer] load: stream decoder open failed: \(error)")
             let playerError = VIPlayerError.decoderCreationFailed(error)
             state = .failed(playerError)
             DispatchQueue.main.async { [weak self] in
@@ -282,12 +301,14 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
         // Wire push source → stream decoder → buffer queue → renderer
         ps.onContentLengthAvailable = { [weak self, weak sd] length in
-            guard let sd else { return }
+            guard let self, let sd else { return }
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
+            guard !stale else { return }
             sd.contentLength = length
             sd.updateDuration()
-            if let self, sd.duration > 0 {
+            if sd.duration > 0 {
                 self.duration = sd.duration
-                debugPrint("[VIAudioPlayer] duration updated from content length: \(String(format: "%.2f", sd.duration))s")
+                VILogger.debug("[VIAudioPlayer] duration updated from content length: \(String(format: "%.2f", sd.duration))s")
             }
         }
 
@@ -295,14 +316,12 @@ public final class VIAudioPlayer: @unchecked Sendable {
         ps.onDataReceived = { [weak self, weak sd] data in
             guard let self, let sd else { return }
 
-            self.lock.lock()
-            let stale = thisLoad != self.loadGeneration
-            self.lock.unlock()
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
             guard !stale else { return }
 
             dataChunkCount += 1
             if dataChunkCount <= 5 || dataChunkCount % 50 == 0 {
-                debugPrint("[VIAudioPlayer] onDataReceived #\(dataChunkCount): \(data.count) bytes, total fed to decoder=\(sd.totalBytesReceived + Int64(data.count))")
+                VILogger.debug("[VIAudioPlayer] onDataReceived #\(dataChunkCount): \(data.count) bytes, total fed to decoder=\(sd.totalBytesReceived + Int64(data.count))")
             }
             sd.feed(data)
         }
@@ -310,9 +329,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
         sd.onOutputFormatReady = { [weak self] format, dur in
             guard let self else { return }
 
-            self.lock.lock()
-            let stale = thisLoad != self.loadGeneration
-            self.lock.unlock()
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
             guard !stale else { return }
 
             if dur > 0 {
@@ -321,75 +338,87 @@ public final class VIAudioPlayer: @unchecked Sendable {
             do {
                 try self.renderer.prepare(format: format)
             } catch {
-                debugPrint("[VIAudioPlayer] renderer prepare failed: \(error)")
+                VILogger.debug("[VIAudioPlayer] renderer prepare failed: \(error)")
             }
-            debugPrint("[VIAudioPlayer] load(network): format ready, duration=\(String(format: "%.2f", self.duration))s")
+            VILogger.debug("[VIAudioPlayer] load(network): format ready, duration=\(String(format: "%.2f", self.duration))s")
         }
 
         var bufferReadyCount = 0
         sd.onBufferReady = { [weak self] buffer in
             guard let self else { return }
 
-            self.lock.lock()
-            let stale = thisLoad != self.loadGeneration
-            self.lock.unlock()
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
             guard !stale else { return }
 
             let rate = buffer.format.sampleRate
             let bufDur = rate > 0 ? Double(buffer.frameLength) / rate : 0
-            self.lock.lock()
-            self.networkBufferedDuration += bufDur
-            let accumulated = self.networkBufferedDuration
-            self.lock.unlock()
+            let accumulated: TimeInterval = self.stateQueue.sync {
+                self.networkBufferedDuration += bufDur
+                return self.networkBufferedDuration
+            }
 
             bufferReadyCount += 1
             if bufferReadyCount <= 5 || bufferReadyCount % 50 == 0 {
-                debugPrint("[VIAudioPlayer] onBufferReady #\(bufferReadyCount): frames=\(buffer.frameLength) state=\(self.state) accumulated=\(String(format: "%.2f", accumulated))s")
+                VILogger.debug("[VIAudioPlayer] onBufferReady #\(bufferReadyCount): frames=\(buffer.frameLength) state=\(self.state) accumulated=\(String(format: "%.2f", accumulated))s")
             }
 
             if self.state == .playing {
                 self.renderer.scheduleBuffer(buffer)
             } else {
-                // Buffering: try non-blocking enqueue; if queue full, schedule directly to renderer.
                 if !self.bufferQueue.tryEnqueue(buffer) {
                     self.renderer.scheduleBuffer(buffer)
                 }
-                self.checkBufferingToPlaying()
             }
         }
 
         sd.onEndOfStream = { [weak self] in
             guard let self else { return }
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
+            guard !stale else { return }
             self.streamEndReached = true
             self.feedRenderer()
             self.checkStreamFinished()
         }
 
-        sd.onError = { error in
-            debugPrint("[VIAudioPlayer] stream decoder error: \(error)")
+        sd.onError = { [weak self] error in
+            guard let self else { return }
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
+            guard !stale else { return }
+            VILogger.debug("[VIAudioPlayer] stream decoder error: \(error)")
         }
 
-        ps.onWaitingForNetworkChanged = { waiting in
+        ps.onWaitingForNetworkChanged = { [weak self] waiting in
+            guard let self else { return }
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
+            guard !stale else { return }
             if waiting {
-                debugPrint("[VIAudioPlayer] waiting for network…")
+                VILogger.debug("[VIAudioPlayer] waiting for network…")
             } else {
-                debugPrint("[VIAudioPlayer] network recovered")
+                VILogger.debug("[VIAudioPlayer] network recovered")
             }
         }
 
         ps.onEndOfFile = { [weak self] in
             guard let self else { return }
-            debugPrint("[VIAudioPlayer] push source: end of file")
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
+            guard !stale else { return }
+            VILogger.debug("[VIAudioPlayer] push source: end of file")
             self.streamEndReached = true
             self.streamDecoder?.flush()
             self.feedRenderer()
-            self.checkBufferingToPlaying()
-            self.checkStreamFinished()
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.checkBufferingToPlaying()
+                self.checkStreamFinished()
+                self.notifyBufferState()
+            }
         }
 
         ps.onError = { [weak self] error in
             guard let self else { return }
-            debugPrint("[VIAudioPlayer] push source fatal error: \(error)")
+            let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
+            guard !stale else { return }
+            VILogger.debug("[VIAudioPlayer] push source fatal error: \(error)")
             let playerError = VIPlayerError.networkError(error)
             DispatchQueue.main.async {
                 self.state = .failed(playerError)
@@ -405,28 +434,22 @@ public final class VIAudioPlayer: @unchecked Sendable {
     // MARK: - Play
 
     public func play() {
+        playWhenReady = true
+        
         if isNetworkMode {
-            playWhenReady = true
             // Accept play() in any state for network mode (including preparing/buffering)
             guard state == .ready || state == .paused || state == .buffering || state == .preparing else { return }
             pushSource?.resume()
 
-            lock.lock()
-            let accumulated = networkBufferedDuration
-            lock.unlock()
+            let accumulated: TimeInterval = stateQueue.sync { networkBufferedDuration }
             let required = requiredBufferDuration()
-            debugPrint("[VIAudioPlayer] play(): network mode, accumulated=\(String(format: "%.2f", accumulated))s required=\(String(format: "%.2f", required))s streamEnd=\(streamEndReached)")
+            VILogger.debug("[VIAudioPlayer] play(): network mode, accumulated=\(String(format: "%.2f", accumulated))s required=\(String(format: "%.2f", required))s streamEnd=\(streamEndReached)")
 
             if accumulated >= required || (streamEndReached && accumulated > 0) {
                 state = .playing
-                if let fmt = streamDecoder?.outputFormat {
-                    try? renderer.prepare(format: fmt)
-                }
-                renderer.rate = desiredRate
-                feedRenderer()
-                renderer.play()
+                startNetworkRendererAsync()
                 bufferingReason = nil
-                debugPrint("[VIAudioPlayer] play(): immediate transition to playing")
+                VILogger.debug("[VIAudioPlayer] play(): immediate transition to playing")
             } else {
                 if state != .buffering {
                     bufferingReason = .initialLoad
@@ -437,10 +460,22 @@ public final class VIAudioPlayer: @unchecked Sendable {
             return
         }
 
-        guard state == .ready || state == .paused else { return }
+        guard state == .ready || state == .paused || state == .preparing else { return }
+        if state == .preparing { return }
+
         state = .playing
         renderer.rate = desiredRate
-        renderer.play()
+        do {
+            try renderer.play()
+        } catch {
+            let playerError = VIPlayerError.renderingFailed(error)
+            state = .failed(playerError)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.delegate?.player(self, didReceiveError: playerError)
+            }
+            return
+        }
         startDecoding()
         startTimeUpdates()
     }
@@ -518,11 +553,11 @@ public final class VIAudioPlayer: @unchecked Sendable {
             return
         }
 
-        lock.lock()
-        isSeeking = true
-        seekGeneration += 1
-        let thisGeneration = seekGeneration
-        lock.unlock()
+        let thisGeneration: Int = stateQueue.sync {
+            isSeeking = true
+            seekGeneration += 1
+            return seekGeneration
+        }
 
         let wasPlaying = isPlaying
 
@@ -533,18 +568,14 @@ public final class VIAudioPlayer: @unchecked Sendable {
         decodeQueue.async { [weak self] in
             guard let self else { return }
 
-            self.lock.lock()
-            let stale = thisGeneration != self.seekGeneration
-            self.lock.unlock()
+            let stale: Bool = self.stateQueue.sync { thisGeneration != self.seekGeneration }
             if stale {
                 completion?(false)
                 return
             }
 
             guard let decoder = self.decoder else {
-                self.lock.lock()
-                self.isSeeking = false
-                self.lock.unlock()
+                self.stateQueue.sync { self.isSeeking = false }
                 completion?(false)
                 return
             }
@@ -558,10 +589,11 @@ public final class VIAudioPlayer: @unchecked Sendable {
                     try self.renderer.prepare(format: fmt)
                 }
 
-                self.lock.lock()
-                let stillCurrent = thisGeneration == self.seekGeneration
-                self.isSeeking = false
-                self.lock.unlock()
+                let stillCurrent: Bool = self.stateQueue.sync {
+                    let current = thisGeneration == self.seekGeneration
+                    self.isSeeking = false
+                    return current
+                }
 
                 guard stillCurrent else {
                     completion?(false)
@@ -574,7 +606,14 @@ public final class VIAudioPlayer: @unchecked Sendable {
                                 || self.state == .buffering else { return }
                         self.state = .playing
                         self.renderer.rate = self.desiredRate
-                        self.renderer.play()
+                        do {
+                            try self.renderer.play()
+                        } catch {
+                            let playerError = VIPlayerError.renderingFailed(error)
+                            self.state = .failed(playerError)
+                            self.delegate?.player(self, didReceiveError: playerError)
+                            return
+                        }
                         self.startDecoding()
                         self.startTimeUpdates()
                     }
@@ -585,9 +624,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
                 }
                 completion?(true)
             } catch {
-                self.lock.lock()
-                self.isSeeking = false
-                self.lock.unlock()
+                self.stateQueue.sync { self.isSeeking = false }
                 let playerError = VIPlayerError.seekFailed(error)
                 self.state = .failed(playerError)
                 DispatchQueue.main.async {
@@ -608,30 +645,20 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
         let wasPlaying = isPlaying || playWhenReady
 
-        lock.lock()
-        seekGeneration += 1
-        lock.unlock()
+        stateQueue.sync {
+            seekGeneration += 1
+            networkBufferedDuration = 0
+        }
 
         renderer.stop()
         bufferQueue.reset()
         streamEndReached = false
         bufferingReason = .afterSeek
-        lock.lock()
-        networkBufferedDuration = 0
-        lock.unlock()
 
         let byteOffset = sd.seekOffset(for: time) ?? 0
 
-        // Reset stream decoder and reopen
-        let hint = VIStreamDecoder.fileTypeHint(for: networkFileExt)
-        sd.reset()
-        do {
-            try sd.open(fileTypeHint: hint)
-        } catch {
-            debugPrint("[VIAudioPlayer] seekNetwork: stream decoder reopen failed: \(error)")
-            completion?(false)
-            return
-        }
+        // Reset stream decoder for a discontinuity
+        sd.resetForSeek()
 
         if let cl = ps.contentLength {
             sd.contentLength = cl
@@ -716,18 +743,18 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
     private func decodeLoop() {
         guard let decoder = decoder else {
-            debugPrint("[VIAudioPlayer] decodeLoop: decoder is nil, aborting")
+            VILogger.debug("[VIAudioPlayer] decodeLoop: decoder is nil, aborting")
             return
         }
         let format = decoder.outputFormat
-        debugPrint("[VIAudioPlayer] decodeLoop started, format: \(format)")
+        VILogger.debug("[VIAudioPlayer] decodeLoop started, format: \(format)")
 
         while !shouldStopDecoding {
             guard let buffer = AVAudioPCMBuffer(
                 pcmFormat: format,
                 frameCapacity: configuration.framesPerBuffer
             ) else {
-                debugPrint("[VIAudioPlayer] decodeLoop: failed to create PCM buffer")
+                VILogger.debug("[VIAudioPlayer] decodeLoop: failed to create PCM buffer")
                 break
             }
 
@@ -735,8 +762,8 @@ public final class VIAudioPlayer: @unchecked Sendable {
                 let hasMore = try decoder.decode(into: buffer)
                 guard buffer.frameLength > 0 else {
                     if !hasMore {
-                        debugPrint("[VIAudioPlayer] decodeLoop: end of stream reached")
-                        drainBufferQueue()
+                        VILogger.debug("[VIAudioPlayer] decodeLoop: end of stream reached")
+                        feedRenderer()
                         waitForPlaybackFinish()
                         break
                     }
@@ -745,21 +772,21 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
                 let enqueued = bufferQueue.enqueue(buffer)
                 if !enqueued {
-                    debugPrint("[VIAudioPlayer] decodeLoop: enqueue returned false (flushing or stopped)")
+                    VILogger.debug("[VIAudioPlayer] decodeLoop: enqueue returned false (flushing or stopped)")
                     break
                 }
 
                 feedRenderer()
 
                 if !hasMore {
-                    debugPrint("[VIAudioPlayer] decodeLoop: last buffer decoded, draining")
-                    drainBufferQueue()
+                    VILogger.debug("[VIAudioPlayer] decodeLoop: last buffer decoded, draining")
+                    feedRenderer()
                     waitForPlaybackFinish()
                     break
                 }
             } catch {
                 if !shouldStopDecoding {
-                    debugPrint("[VIAudioPlayer] decodeLoop error: \(error)")
+                    VILogger.debug("[VIAudioPlayer] decodeLoop error: \(error)")
                     let playerError = VIPlayerError.decodingFailed(error)
                     DispatchQueue.main.async { [weak self] in
                         guard let self else { return }
@@ -770,20 +797,56 @@ public final class VIAudioPlayer: @unchecked Sendable {
                 break
             }
         }
-        debugPrint("[VIAudioPlayer] decodeLoop exited, shouldStop=\(shouldStopDecoding)")
+        VILogger.debug("[VIAudioPlayer] decodeLoop exited, shouldStop=\(shouldStopDecoding)")
     }
 
     // MARK: - Buffer feeding
 
-    private func feedRenderer() {
-        while let buffer = bufferQueue.dequeue() {
+    /// Schedule decoded buffers into renderer in small batches.
+    /// This avoids monopolizing the main thread when network push produces
+    /// many buffers quickly.
+    private func feedRenderer(maxBuffers: Int = 8) {
+        var scheduled = 0
+        while scheduled < maxBuffers, let buffer = bufferQueue.dequeue() {
             renderer.scheduleBuffer(buffer)
+            scheduled += 1
         }
     }
 
-    private func drainBufferQueue() {
-        while let buffer = bufferQueue.dequeue() {
-            renderer.scheduleBuffer(buffer)
+    /// Start renderer playback on a dedicated queue so slow system audio calls
+    /// (e.g. first AVAudioSession activation) do not block the main thread.
+    private func startNetworkRendererAsync() {
+        let fmt = streamDecoder?.outputFormat
+        renderControlQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.state == .playing else { return }
+
+            if let fmt, !self.renderer.isPrepared {
+                do {
+                    try self.renderer.prepare(format: fmt)
+                } catch {
+                    let playerError = VIPlayerError.renderingFailed(error)
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        self.state = .failed(playerError)
+                        self.delegate?.player(self, didReceiveError: playerError)
+                    }
+                    return
+                }
+            }
+
+            self.renderer.rate = self.desiredRate
+            self.feedRenderer()
+            do {
+                try self.renderer.play()
+            } catch {
+                let playerError = VIPlayerError.renderingFailed(error)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.state = .failed(playerError)
+                    self.delegate?.player(self, didReceiveError: playerError)
+                }
+            }
         }
     }
 
@@ -805,31 +868,20 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
     /// Called after a buffer is enqueued (network push path).
     /// Checks whether we have enough buffered audio to transition from
-    /// `.buffering` to `.playing`.
+    /// `.buffering` to `.playing`. Must be called on the main queue.
     private func checkBufferingToPlaying() {
         guard isNetworkMode, state == .buffering, playWhenReady else { return }
 
-        lock.lock()
-        let accumulated = networkBufferedDuration
-        lock.unlock()
-
+        let accumulated: TimeInterval = stateQueue.sync { networkBufferedDuration }
         let required = requiredBufferDuration()
         let enoughData = accumulated >= required || (streamEndReached && accumulated > 0)
 
-        if enoughData {
-            DispatchQueue.main.async { [weak self] in
-                guard let self, self.state == .buffering else { return }
-                self.bufferingReason = nil
-                self.state = .playing
-                if let fmt = self.streamDecoder?.outputFormat {
-                    try? self.renderer.prepare(format: fmt)
-                }
-                self.renderer.rate = self.desiredRate
-                self.feedRenderer()
-                self.renderer.play()
-                debugPrint("[VIAudioPlayer] buffering → playing (accumulated=\(String(format: "%.2f", accumulated))s required=\(String(format: "%.2f", required))s scheduled=\(self.renderer.scheduledBufferCount))")
-            }
-        }
+        guard enoughData else { return }
+
+        bufferingReason = nil
+        state = .playing
+        startNetworkRendererAsync()
+        VILogger.debug("[VIAudioPlayer] buffering → playing (accumulated=\(String(format: "%.2f", accumulated))s required=\(String(format: "%.2f", required))s scheduled=\(renderer.scheduledBufferCount))")
     }
 
     /// Check if stream has ended and all buffers consumed.
@@ -868,15 +920,14 @@ public final class VIAudioPlayer: @unchecked Sendable {
         guard !streamEndReached else { return }
 
         if renderer.scheduledBufferCount == 0 && bufferQueue.isEmpty {
-            debugPrint("[VIAudioPlayer] buffer underrun detected, entering buffering state")
+            VILogger.debug("[VIAudioPlayer] buffer underrun detected, entering buffering state")
             let rendererTime = renderer.currentPlaybackTime
             playbackBaseTime += rendererTime
             renderer.stop()
-            lock.lock()
-            networkBufferedDuration = 0
-            lock.unlock()
+            stateQueue.sync { networkBufferedDuration = 0 }
             bufferingReason = .underrun
             state = .buffering
+            notifyBufferState()
         }
     }
 
@@ -891,12 +942,17 @@ public final class VIAudioPlayer: @unchecked Sendable {
         )
         timer.setEventHandler { [weak self] in
             guard let self else { return }
+
             if self.state == .playing {
                 self.updateCurrentTime()
                 self.checkForBufferUnderrun()
-                if self.isNetworkMode { self.checkStreamFinished() }
+                if self.isNetworkMode {
+                    self.checkStreamFinished()
+                    self.notifyBufferState()
+                }
             } else if self.state == .buffering {
                 self.checkBufferingToPlaying()
+                if self.isNetworkMode { self.notifyBufferState() }
             }
         }
         timer.resume()
@@ -909,17 +965,46 @@ public final class VIAudioPlayer: @unchecked Sendable {
     }
 
     private func updateCurrentTime() {
-        lock.lock()
-        let seeking = isSeeking
-        lock.unlock()
+        let seeking: Bool = stateQueue.sync { isSeeking }
         guard !seeking else { return }
+
+        // Lazily pick up duration from the stream decoder when ours is still 0
+        // (bitrate may arrive after onOutputFormatReady).
+        if duration == 0, let sd = streamDecoder, sd.duration > 0 {
+            duration = sd.duration
+        }
 
         let rendererTime = renderer.currentPlaybackTime
         let time = playbackBaseTime + rendererTime
-        let clampedTime = min(time, duration)
+        let clampedTime = duration > 0 ? min(time, duration) : time
         guard clampedTime.isFinite else { return }
         currentTime = clampedTime
         delegate?.player(self, didUpdateTime: clampedTime, duration: duration)
+    }
+
+    // MARK: - Buffer state notification
+
+    /// Must be called on the main queue (from the timer handler).
+    private func notifyBufferState() {
+        guard isNetworkMode else { return }
+
+        let bufferState: VIBufferState
+        if streamEndReached {
+            bufferState = .full
+        } else {
+            let accumulated: TimeInterval = stateQueue.sync { networkBufferedDuration }
+            let required = requiredBufferDuration()
+            if accumulated <= 0 {
+                bufferState = .empty
+            } else if accumulated >= required {
+                bufferState = .sufficient
+            } else {
+                let progress = Float(accumulated / required)
+                bufferState = .buffering(progress: min(progress, 1.0))
+            }
+        }
+
+        delegate?.player(self, didUpdateBuffer: bufferState)
     }
 
     // MARK: - Helpers

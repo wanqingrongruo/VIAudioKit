@@ -10,7 +10,7 @@ final class VIRangeRequest: NSObject, @unchecked Sendable {
     let unitKey: String
     let configuration: VIDownloaderConfiguration
 
-    private var session: URLSession?
+    private var ownedSession: URLSession?
     private(set) var dataTask: URLSessionDataTask?
     private var writeHandle: FileHandle?
     private var segmentRelativePath: String?
@@ -44,8 +44,10 @@ final class VIRangeRequest: NSObject, @unchecked Sendable {
 
         let config = URLSessionConfiguration.default
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
-        dataTask = session?.dataTask(with: request)
+        let owned = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+        ownedSession = owned
+        
+        dataTask = owned.dataTask(with: request)
         dataTask?.priority = URLSessionTask.highPriority
         dataTask?.resume()
     }
@@ -80,8 +82,7 @@ extension VIRangeRequest: URLSessionDataDelegate {
             return
         }
 
-        guard (200...299).contains(httpResponse.statusCode) ||
-              httpResponse.statusCode == 206 else {
+        guard (200...299).contains(httpResponse.statusCode) else {
             onError?(VIDownloadError.httpError(statusCode: httpResponse.statusCode))
             completionHandler(.cancel)
             return
@@ -154,8 +155,8 @@ extension VIRangeRequest: URLSessionDataDelegate {
             cacheManager.scheduleSave()
             onComplete?()
         }
-        self.session?.invalidateAndCancel()
-        self.session = nil
+        self.ownedSession?.invalidateAndCancel()
+        self.ownedSession = nil
     }
 }
 

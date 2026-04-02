@@ -1,5 +1,8 @@
 import AVFoundation
 import AudioToolbox
+#if !COCOAPODS
+import VIAudioDownloader
+#endif
 
 /// Push-based decoder for network audio streaming.
 ///
@@ -10,7 +13,7 @@ import AudioToolbox
 /// This is fundamentally different from `VINativeDecoder` (pull-based).
 /// The push model naturally handles network buffering: if no data arrives,
 /// nothing happens; when data arrives, it's processed immediately.
-public final class VIStreamDecoder {
+public final class VIStreamDecoder: VIStreamDecoding {
 
     // MARK: - Output callbacks
 
@@ -49,7 +52,6 @@ public final class VIStreamDecoder {
     private var audioFileStream: AudioFileStreamID?
     private var audioConverter: AudioConverterRef?
     private var inputFormat = AudioStreamBasicDescription()
-    private let outputDesc: AudioStreamBasicDescription
     private var discontinuous = false
     private var formatNotified = false
     private var processedPacketCount: Int = 0
@@ -59,19 +61,7 @@ public final class VIStreamDecoder {
 
     // MARK: - Init
 
-    public init() {
-        self.outputDesc = AudioStreamBasicDescription(
-            mSampleRate: 44100,
-            mFormatID: kAudioFormatLinearPCM,
-            mFormatFlags: kAudioFormatFlagIsFloat | kAudioFormatFlagIsNonInterleaved,
-            mBytesPerPacket: 4,
-            mFramesPerPacket: 1,
-            mBytesPerFrame: 4,
-            mChannelsPerFrame: 2,
-            mBitsPerChannel: 32,
-            mReserved: 0
-        )
-    }
+    public init() {}
 
     // MARK: - Open / Close
 
@@ -99,7 +89,12 @@ public final class VIStreamDecoder {
     public func feed(_ data: Data) {
         guard let stream = audioFileStream, !data.isEmpty else { return }
         totalBytesReceived += Int64(data.count)
+        
+        lock.lock()
         let flags: AudioFileStreamParseFlags = discontinuous ? .discontinuity : []
+        if discontinuous { discontinuous = false }
+        lock.unlock()
+        
         data.withUnsafeBytes { raw in
             let status = AudioFileStreamParseBytes(
                 stream,
@@ -108,7 +103,7 @@ public final class VIStreamDecoder {
                 flags
             )
             if status != noErr {
-                debugPrint("[VIStreamDecoder] AudioFileStreamParseBytes error: \(status)")
+                VILogger.debug("[VIStreamDecoder] AudioFileStreamParseBytes error: \(status)")
             }
         }
     }
@@ -138,14 +133,15 @@ public final class VIStreamDecoder {
         return Int64(Double(dataLength) * ratio) + dataOffset
     }
 
-    /// Reset the decoder for a seek operation.
-    /// After calling this, you must call `open(fileTypeHint:)` again
-    /// before feeding new data.
-    public func reset() {
-        close()
-        formatNotified = false
-        processedPacketCount = 0
-        processedPacketSizeTotal = 0
+    /// Reset the decoder state for a seek operation.
+    /// This prepares the parser and converter for a discontinuity.
+    public func resetForSeek() {
+        lock.lock()
+        discontinuous = true
+        if let converter = audioConverter {
+            AudioConverterReset(converter)
+        }
+        lock.unlock()
     }
 
     /// Release all AudioToolbox resources.
@@ -200,13 +196,13 @@ public final class VIStreamDecoder {
             let status = AudioFileStreamGetProperty(stream, kAudioFileStreamProperty_BitRate, &size, &br)
             if status == noErr {
                 bitRate = Double(br)
-                debugPrint("[VIStreamDecoder] BitRate: \(br)")
+                VILogger.debug("[VIStreamDecoder] BitRate: \(br)")
                 // Recompute duration now that we have bitrate
                 computeDuration()
             }
 
         case kAudioFileStreamProperty_ReadyToProducePackets:
-            debugPrint("[VIStreamDecoder] ReadyToProducePackets: converter=\(audioConverter != nil) inputFmt=\(inputFormat.mFormatID) dataOffset=\(dataOffset) contentLength=\(contentLength)")
+            VILogger.debug("[VIStreamDecoder] ReadyToProducePackets: converter=\(audioConverter != nil) inputFmt=\(inputFormat.mFormatID) dataOffset=\(dataOffset) contentLength=\(contentLength)")
             assignMagicCookie(stream)
             notifyFormatIfNeeded()
             let formatID = inputFormat.mFormatID
@@ -229,11 +225,11 @@ public final class VIStreamDecoder {
             stream, kAudioFileStreamProperty_DataFormat, &size, &format
         )
         guard status == noErr else {
-            debugPrint("[VIStreamDecoder] handleDataFormat: getProperty failed: \(status)")
+            VILogger.debug("[VIStreamDecoder] handleDataFormat: getProperty failed: \(status)")
             return
         }
 
-        debugPrint("[VIStreamDecoder] handleDataFormat: formatID=\(format.mFormatID) rate=\(format.mSampleRate) ch=\(format.mChannelsPerFrame) framesPerPkt=\(format.mFramesPerPacket)")
+        VILogger.debug("[VIStreamDecoder] handleDataFormat: formatID=\(format.mFormatID) rate=\(format.mSampleRate) ch=\(format.mChannelsPerFrame) framesPerPkt=\(format.mFramesPerPacket)")
 
         if inputFormat.mFormatID == 0 {
             inputFormat = format
@@ -274,12 +270,12 @@ public final class VIStreamDecoder {
     // MARK: - AudioConverter
 
     private func createConverter(from sourceFormat: AudioStreamBasicDescription) {
-        debugPrint("[VIStreamDecoder] createConverter: in=\(sourceFormat.mFormatID) rate=\(sourceFormat.mSampleRate) ch=\(sourceFormat.mChannelsPerFrame) bitsPerCh=\(sourceFormat.mBitsPerChannel) framesPerPkt=\(sourceFormat.mFramesPerPacket)")
+        VILogger.debug("[VIStreamDecoder] createConverter: in=\(sourceFormat.mFormatID) rate=\(sourceFormat.mSampleRate) ch=\(sourceFormat.mChannelsPerFrame) bitsPerCh=\(sourceFormat.mBitsPerChannel) framesPerPkt=\(sourceFormat.mFramesPerPacket)")
         var inFmt = sourceFormat
         if let existing = audioConverter {
             if memcmp(&inFmt, &inputFormat, MemoryLayout<AudioStreamBasicDescription>.size) == 0 {
                 AudioConverterReset(existing)
-                debugPrint("[VIStreamDecoder] createConverter: reset existing")
+                VILogger.debug("[VIStreamDecoder] createConverter: reset existing")
                 return
             }
             AudioConverterDispose(existing)
@@ -308,7 +304,7 @@ public final class VIStreamDecoder {
         if converter == nil {
             let status = AudioConverterNew(&inFmt, &outFmt, &converter)
             if status != noErr {
-                debugPrint("[VIStreamDecoder] AudioConverterNew failed: \(status)")
+                VILogger.debug("[VIStreamDecoder] AudioConverterNew failed: \(status)")
                 onError?(VIDecoderError.decodeFailed(status))
                 return
             }
@@ -367,15 +363,15 @@ public final class VIStreamDecoder {
     ) {
         packetsCallbackCount += 1
         if packetsCallbackCount <= 3 {
-            debugPrint("[VIStreamDecoder] handlePackets #\(packetsCallbackCount): bytes=\(numBytes) packets=\(numPackets) formatReady=\(isFormatReady) converter=\(audioConverter != nil) outputFmt=\(outputFormat != nil)")
+            VILogger.debug("[VIStreamDecoder] handlePackets #\(packetsCallbackCount): bytes=\(numBytes) packets=\(numPackets) formatReady=\(isFormatReady) converter=\(audioConverter != nil) outputFmt=\(outputFormat != nil)")
         }
 
         guard isFormatReady || outputFormat != nil else {
-            debugPrint("[VIStreamDecoder] handlePackets: skipped (format not ready)")
+            VILogger.debug("[VIStreamDecoder] handlePackets: skipped (format not ready)")
             return
         }
         guard let converter = audioConverter else {
-            debugPrint("[VIStreamDecoder] handlePackets: skipped (no converter)")
+            VILogger.debug("[VIStreamDecoder] handlePackets: skipped (no converter)")
             return
         }
 
@@ -384,6 +380,10 @@ public final class VIStreamDecoder {
         discontinuous = false
 
         updateProcessedPackets(numPackets: numPackets, descs: packetDescs)
+        // For formats where BitRate property is delayed/absent (common with MP3),
+        // continuously refine duration using calculated bitrate from parsed packets.
+        // VIAudioPlayer lazily reads `sd.duration` during time updates.
+        computeDuration()
 
         var convertInfo = ConvertInfo(
             done: false,
@@ -420,14 +420,14 @@ public final class VIStreamDecoder {
             if outputDataPacketSize > 0 {
                 totalBuffersProduced += 1
                 if totalBuffersProduced <= 5 {
-                    debugPrint("[VIStreamDecoder] buffer #\(totalBuffersProduced): frames=\(outputDataPacketSize)")
+                    VILogger.debug("[VIStreamDecoder] buffer #\(totalBuffersProduced): frames=\(outputDataPacketSize)")
                 }
                 onBufferReady?(buffer)
             }
 
             if status == 100 { break }
             if status != noErr && status != 100 {
-                debugPrint("[VIStreamDecoder] AudioConverterFillComplexBuffer error: \(status)")
+                VILogger.debug("[VIStreamDecoder] AudioConverterFillComplexBuffer error: \(status)")
                 break
             }
         }
@@ -465,7 +465,7 @@ public final class VIStreamDecoder {
         computeDuration()
         formatNotified = true
 
-        debugPrint("[VIStreamDecoder] Format ready: rate=\(sampleRate) ch=\(channels) duration=\(String(format: "%.2f", duration))s")
+        VILogger.debug("[VIStreamDecoder] Format ready: rate=\(sampleRate) ch=\(channels) duration=\(String(format: "%.2f", duration))s")
         onOutputFormatReady?(fmt, duration)
     }
 
@@ -473,12 +473,14 @@ public final class VIStreamDecoder {
         let oldDur = duration
         if totalPacketCount > 0, packetDuration > 0 {
             duration = totalPacketCount * packetDuration
-        } else if bitRate > 0, contentLength > 0 {
+        } else if contentLength > 0 {
+            let br = bitRate > 0 ? bitRate : calculatedBitrate()
+            guard br > 0 else { return }
             let dataBytes = totalDataBytes > 0 ? totalDataBytes : (contentLength - dataOffset)
-            duration = Double(dataBytes) * 8.0 / bitRate
+            duration = Double(dataBytes) * 8.0 / br
         }
         if duration != oldDur || duration == 0 {
-            debugPrint("[VIStreamDecoder] computeDuration: packets=\(totalPacketCount) packetDur=\(packetDuration) bitRate=\(bitRate) contentLength=\(contentLength) dataOffset=\(dataOffset) totalDataBytes=\(totalDataBytes) → duration=\(String(format: "%.2f", duration))s")
+            VILogger.debug("[VIStreamDecoder] computeDuration: packets=\(totalPacketCount) packetDur=\(packetDuration) bitRate=\(bitRate) contentLength=\(contentLength) dataOffset=\(dataOffset) totalDataBytes=\(totalDataBytes) → duration=\(String(format: "%.2f", duration))s")
         }
     }
 
@@ -486,7 +488,7 @@ public final class VIStreamDecoder {
     public func updateDuration() {
         computeDuration()
         if duration > 0, formatNotified {
-            debugPrint("[VIStreamDecoder] updateDuration: \(String(format: "%.2f", duration))s (post-format)")
+            VILogger.debug("[VIStreamDecoder] updateDuration: \(String(format: "%.2f", duration))s (post-format)")
         }
     }
 
