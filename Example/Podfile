@@ -6,6 +6,11 @@ target 'VIAudioKitDemo' do
 #  pod 'VIAudioKit', :path => '../', :subspecs => ['Core', 'FFmpeg-Manual']
 
 pod 'VIAudioKit', :path => '../', :subspecs => ['Core', 'FFmpeg']
+
+# 通过直连 Github 仓库的方式，拉取完整的说明书和源码
+#pod 'VIAudioKit', :git => 'https://github.com/wanqingrongruo/VIAudioKit.git', :tag => '0.1.0', :subspecs => ['Core', 'FFmpeg']
+
+# 需要解决 FFmpegKit 404 的问题
 pod 'ffmpeg-kit-ios-full', :podspec => 'https://raw.githubusercontent.com/luthviar/ffmpeg-kit-ios-full/main/ffmpeg-kit-ios-full.podspec'
 
 end

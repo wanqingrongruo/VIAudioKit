@@ -57,26 +57,21 @@
 
 ```ruby
 # 仅引入核心功能 (AudioToolbox 支持的常规格式)
-pod 'VIAudioKit'
-```
+pod 'VIAudioKit', :path => '../VIAudioKit'
 
-如果你希望支持 OGG, OPUS, WMA 等扩展格式，可以通过直接引入 Github 仓库地址的方式拉取完整的 FFmpeg 扩展模块：
-
-```ruby
-# 通过直连 Github 仓库的方式，拉取完整的带有 FFmpeg 子模块的版本
-pod 'VIAudioKit', :git => 'https://github.com/wanqingrongruo/VIAudioKit.git', :tag => '0.1.0', :subspecs => ['Core', 'FFmpeg']
-
+# 方式一：希望通过 CocoaPods 全自动拉取 FFmpegKit (引入 FFmpeg subspec)
+pod 'VIAudioKit', :path => '../VIAudioKit', :subspecs => ['Core', 'FFmpeg']
 # 必须在宿主 App 的 Podfile 中补充 FFmpegKit 的源地址重定向（详见下方注意2）
 pod 'ffmpeg-kit-ios-full', :podspec => 'https://raw.githubusercontent.com/luthviar/ffmpeg-kit-ios-full/main/ffmpeg-kit-ios-full.podspec'
 
-# 或者，如果宿主 App 已经 手动导入 了 FFmpegKit 的 Framework/XCFramework 库
+# 方式二：宿主 App 已经 手动导入 了 FFmpegKit 的 Framework/XCFramework 库
 # 使用免依赖的 FFmpeg-Manual subspec，避免重复链接导致的 Duplicate Symbols 报错
-# pod 'VIAudioKit', :git => 'https://github.com/wanqingrongruo/VIAudioKit.git', :tag => '0.1.0', :subspecs => ['Core', 'FFmpeg-Manual']
+# pod 'VIAudioKit', :path => '../VIAudioKit', :subspecs => ['Core', 'FFmpeg-Manual']
 ```
 *注意：*
 1. *如果引入了包含 FFmpeg 的模块，需要在 Podfile 顶部指定静态链接：`use_frameworks! :linkage => :static`。*
-2. *因为官方 `ffmpeg-kit` 的 CocoaPods 默认源存在下载链接失效（404）的问题，且 Podspec 规范不允许库作者在发布到官方 Trunk 的 `.podspec` 中包含会引发 404 的外部依赖，因此官方中央仓库的 `VIAudioKit` 默认只包含 `Core` 模块。如果需要 `FFmpeg` 支持，请务必使用如上 `:git` 的方式直接从 Github 获取。同时，**必须在宿主 App 的 Podfile 中显式指定**修复过的 `ffmpeg-kit-ios-full` podspec 地址。如果不加这行重定向，`pod install` 将因为找不到依赖而报错。*
-3. **针对手动导入 FFmpegKit 的场景**：
+2. *针对方式一：因为官方 `ffmpeg-kit` 的 CocoaPods 默认源存在下载链接失效（404）的问题，且 Podspec 规范不允许库作者在 `.podspec` 中指定外部库的具体 URL 下载地址，所以**必须在宿主 App 的 Podfile 中显式指定**修复过的 `ffmpeg-kit-ios-full` podspec 地址。如果不加这行重定向，`pod install` 将因为找不到依赖而报错。*
+3. **针对方式二 (手动导入 FFmpegKit)**：
    如果你选择了 `FFmpeg-Manual`，CocoaPods 将不会帮你下载和链接 FFmpeg。你必须确保：
    - 宿主工程内已经正确链接了相关的 `ffmpegkit.xcframework` 库文件。
    - 由于 CocoaPods 编译 `VIAudioKit/FFmpeg-Manual` 源码时需要能够找到 FFmpeg 的 C 头文件（如 `<libavformat/avformat.h>`），你需要保证在宿主工程的 `Header Search Paths` 或者配置给 CocoaPods 的 `USER_HEADER_SEARCH_PATHS` 中，包含了该 Framework 的 Headers 路径，使得子模块内的桥接代码能够正常解析。
@@ -265,17 +260,3 @@ idle → preparing → ready → playing ⇄ paused
 ## 许可证
 
 MIT License
-
-
-## 发布指令
-```
-# 1. 备份完整的 podspec
-cp VIAudioKit.podspec /tmp/VIAudioKit.podspec.bak
-# 2. 临时剔除 FFmpeg 子模块配置，避免被官方服务器拦截 404
-sed -i '' '/s.subspec .FFmpeg. do/,/^  end/d' VIAudioKit.podspec
-sed -i '' '/s.subspec .FFmpeg-Manual. do/,/^  end/d' VIAudioKit.podspec
-# 3. 执行发布（只发布 Core 模块，加上忽略警告参数）
-pod trunk push VIAudioKit.podspec --allow-warnings
-# 4. 看到 🎉 Congrats 后，恢复完整的 podspec
-mv /tmp/VIAudioKit.podspec.bak VIAudioKit.podspec
-```
