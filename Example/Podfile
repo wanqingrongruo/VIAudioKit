@@ -3,6 +3,9 @@ platform :ios, '15.0'
 use_frameworks! :linkage => :static
 
 target 'VIAudioKitDemo' do
-  pod 'VIAudioKit', :path => '../', :subspecs => ['Core', 'FFmpeg']
-  pod 'ffmpeg-kit-ios-full', :podspec => 'https://raw.githubusercontent.com/luthviar/ffmpeg-kit-ios-full/main/ffmpeg-kit-ios-full.podspec'
+#  pod 'VIAudioKit', :path => '../', :subspecs => ['Core', 'FFmpeg-Manual']
+
+pod 'VIAudioKit', :path => '../', :subspecs => ['Core', 'FFmpeg']
+pod 'ffmpeg-kit-ios-full', :podspec => 'https://raw.githubusercontent.com/luthviar/ffmpeg-kit-ios-full/main/ffmpeg-kit-ios-full.podspec'
+
 end

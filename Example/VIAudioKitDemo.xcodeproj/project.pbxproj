@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		19416132D743C0D66976232B /* Pods_VIAudioKitDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B779FAAABF912DDB36456921 /* Pods_VIAudioKitDemo.framework */; };
 		22DFCBCB81D5D93E7FBB7779 /* 关于郑州的记忆.flac in Resources */ = {isa = PBXBuildFile; fileRef = 69287010A35940959F67C75B /* 关于郑州的记忆.flac */; };
 		42B30BFD0B67B866E687BF90 /* 童话镇.flac in Resources */ = {isa = PBXBuildFile; fileRef = 40481BD6C38EC50A62A286CC /* 童话镇.flac */; };
 		5250426FBB0B09FD98B3334C /* 天空之城.flac in Resources */ = {isa = PBXBuildFile; fileRef = E433A45A045B32FE302D121E /* 天空之城.flac */; };
@@ -20,7 +19,23 @@
 		E08B872D2F7E3E2B0054EB4B /* 天空之城.ogg in Resources */ = {isa = PBXBuildFile; fileRef = E08B872A2F7E3E2B0054EB4B /* 天空之城.ogg */; };
 		E08B87302F7E3F3D0054EB4B /* 天空之城.aac in Resources */ = {isa = PBXBuildFile; fileRef = E08B872E2F7E3F3D0054EB4B /* 天空之城.aac */; };
 		E08B87312F7E3F3D0054EB4B /* 天空之城.opus in Resources */ = {isa = PBXBuildFile; fileRef = E08B872F2F7E3F3D0054EB4B /* 天空之城.opus */; };
+		E08B87542F7E5FDB0054EB4B /* Pods_VIAudioKitDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B779FAAABF912DDB36456921 /* Pods_VIAudioKitDemo.framework */; };
+		E08B87552F7E5FDB0054EB4B /* Pods_VIAudioKitDemo.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B779FAAABF912DDB36456921 /* Pods_VIAudioKitDemo.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E08B87452F7E5F600054EB4B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				E08B87552F7E5FDB0054EB4B /* Pods_VIAudioKitDemo.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2C73EF0E18AB7EDC247151F6 /* AudioPlayerDemoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerDemoController.swift; sourceTree = "<group>"; };
@@ -47,7 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				19416132D743C0D66976232B /* Pods_VIAudioKitDemo.framework in Frameworks */,
+				E08B87542F7E5FDB0054EB4B /* Pods_VIAudioKitDemo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,7 +135,8 @@
 				FCE8CBD5BF063023299A0D03 /* Sources */,
 				16D3710F7185D98BC6940803 /* Resources */,
 				F8928D761C0923D89EA6A05D /* Frameworks */,
-				B84CDCB5335A8BAA5EEB346E /* [CP] Embed Pods Frameworks */,
+				E08B87452F7E5F600054EB4B /* Embed Frameworks */,
+				F16951C32A08ACD09F8CB3A5 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -202,7 +218,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		B84CDCB5335A8BAA5EEB346E /* [CP] Embed Pods Frameworks */ = {
+		F16951C32A08ACD09F8CB3A5 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (

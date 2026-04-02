@@ -59,10 +59,22 @@
 # 仅引入核心功能 (AudioToolbox 支持的常规格式)
 pod 'VIAudioKit', :path => '../VIAudioKit'
 
-# 如果需要支持 OGG/WMA 等扩展格式，引入 FFmpeg subspec:
+# 方式一：希望通过 CocoaPods 全自动拉取 FFmpegKit (引入 FFmpeg subspec)
 pod 'VIAudioKit', :path => '../VIAudioKit', :subspecs => ['Core', 'FFmpeg']
+# 必须在宿主 App 的 Podfile 中补充 FFmpegKit 的源地址重定向（详见下方注意2）
+pod 'ffmpeg-kit-ios-full', :podspec => 'https://raw.githubusercontent.com/luthviar/ffmpeg-kit-ios-full/main/ffmpeg-kit-ios-full.podspec'
+
+# 方式二：宿主 App 已经 手动导入 了 FFmpegKit 的 Framework/XCFramework 库
+# 使用免依赖的 FFmpeg-Manual subspec，避免重复链接导致的 Duplicate Symbols 报错
+# pod 'VIAudioKit', :path => '../VIAudioKit', :subspecs => ['Core', 'FFmpeg-Manual']
 ```
-*注意：如果引入了 FFmpeg，需要在 Podfile 顶部指定静态链接：`use_frameworks! :linkage => :static`。*
+*注意：*
+1. *如果引入了包含 FFmpeg 的模块，需要在 Podfile 顶部指定静态链接：`use_frameworks! :linkage => :static`。*
+2. *针对方式一：因为官方 `ffmpeg-kit` 的 CocoaPods 默认源存在下载链接失效（404）的问题，且 Podspec 规范不允许库作者在 `.podspec` 中指定外部库的具体 URL 下载地址，所以**必须在宿主 App 的 Podfile 中显式指定**修复过的 `ffmpeg-kit-ios-full` podspec 地址。如果不加这行重定向，`pod install` 将因为找不到依赖而报错。*
+3. **针对方式二 (手动导入 FFmpegKit)**：
+   如果你选择了 `FFmpeg-Manual`，CocoaPods 将不会帮你下载和链接 FFmpeg。你必须确保：
+   - 宿主工程内已经正确链接了相关的 `ffmpegkit.xcframework` 库文件。
+   - 由于 CocoaPods 编译 `VIAudioKit/FFmpeg-Manual` 源码时需要能够找到 FFmpeg 的 C 头文件（如 `<libavformat/avformat.h>`），你需要保证在宿主工程的 `Header Search Paths` 或者配置给 CocoaPods 的 `USER_HEADER_SEARCH_PATHS` 中，包含了该 Framework 的 Headers 路径，使得子模块内的桥接代码能够正常解析。
 
 ### Swift Package Manager
 

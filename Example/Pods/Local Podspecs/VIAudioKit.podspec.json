@@ -60,6 +60,23 @@
         "SWIFT_INCLUDE_PATHS": "$(PODS_TARGET_SRCROOT)/Sources/VIAudioFFmpeg/include",
         "USER_HEADER_SEARCH_PATHS": "$(inherited) ${PODS_ROOT}/ffmpeg-kit-ios-full/ffmpegkit.xcframework/ios-arm64/ffmpegkit.framework/Headers"
       }
+    },
+    {
+      "name": "FFmpeg-Manual",
+      "dependencies": {
+        "VIAudioKit/Core": [
+
+        ]
+      },
+      "source_files": "Sources/VIAudioFFmpeg/**/*.{swift,m,c}",
+      "preserve_paths": [
+        "Sources/VIAudioFFmpeg/include/module.modulemap",
+        "Sources/VIAudioFFmpeg/include/**/*.h"
+      ],
+      "pod_target_xcconfig": {
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "COCOAPODS",
+        "SWIFT_INCLUDE_PATHS": "$(PODS_TARGET_SRCROOT)/Sources/VIAudioFFmpeg/include"
+      }
     }
   ],
   "swift_version": "5.9"
