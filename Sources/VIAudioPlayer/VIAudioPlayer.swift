@@ -180,6 +180,15 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
         state = .preparing
 
+        // Reset time/duration on the main queue so UI can clear the previous track immediately
+        // (stop() zeroes values but delegate was not notified).
+        let t = currentTime
+        let d = duration
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.delegate?.player(self, didUpdateTime: t, duration: d)
+        }
+
         VILogger.debug("[VIAudioPlayer] load: \(url.lastPathComponent) isFile=\(url.isFileURL)")
 
         if url.isFileURL {
@@ -240,6 +249,10 @@ public final class VIAudioPlayer: @unchecked Sendable {
                 self.duration = decoder.duration
 
                 VILogger.debug("[VIAudioPlayer] load: decoder ready, duration=\(String(format: "%.2f", decoder.duration))s")
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.delegate?.player(self, didUpdateTime: self.currentTime, duration: self.duration)
+                }
                 try self.renderer.prepare(format: decoder.outputFormat)
                 VILogger.debug("[VIAudioPlayer] load: renderer prepared, setting state=ready")
                 self.state = .ready
@@ -283,26 +296,19 @@ public final class VIAudioPlayer: @unchecked Sendable {
         
         let sd = sdType.init()
         sd.framesPerBuffer = configuration.framesPerBuffer
+        if let ffsd = sd as? VIFFmpegStreamDecoder {
+            ffsd.fileExtension = ext
+        }
 
         self.pushSource = ps
         self.streamDecoder = sd
 
-        let hint = VIStreamDecoder.fileTypeHint(for: ext)
-        do {
-            try sd.open(fileTypeHint: hint)
-        } catch {
-            VILogger.debug("[VIAudioPlayer] load: stream decoder open failed: \(error)")
-            let playerError = VIPlayerError.decoderCreationFailed(error)
-            state = .failed(playerError)
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                self.delegate?.player(self, didReceiveError: playerError)
-            }
-            return
-        }
-
         state = .buffering
         bufferingReason = .initialLoad
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.notifyBufferState()
+        }
 
         // Wire push source → stream decoder → buffer queue → renderer
         ps.onContentLengthAvailable = { [weak self, weak sd] length in
@@ -310,10 +316,26 @@ public final class VIAudioPlayer: @unchecked Sendable {
             let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
             guard !stale else { return }
             sd.contentLength = length
-            sd.updateDuration()
+            // Native stream decoder: recomputes duration from Content-Length + bitrate.
+            // FFmpeg push decoder (VIFFmpegStreamDecoder): do NOT call updateDuration() here — it takes
+            // `stateLock` while the decode thread holds that same lock during avformat_open_input /
+            // avformat_find_stream_info (blocking on custom IO). The URL session queue often delivers
+            // this callback before the first data chunk, so we deadlock before feed() runs and OGG/WMA
+            // never finishes probing. Duration is updated inside the FFmpeg decoder once stream info exists.
+            if let nativeSD = sd as? VIStreamDecoder {
+                nativeSD.updateDuration()
+            }
             if sd.duration > 0 {
                 self.duration = sd.duration
                 VILogger.debug("[VIAudioPlayer] duration updated from content length: \(String(format: "%.2f", sd.duration))s")
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.delegate?.player(self, didUpdateTime: self.currentTime, duration: self.duration)
+                }
+            }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.notifyBufferState()
             }
         }
 
@@ -329,6 +351,10 @@ public final class VIAudioPlayer: @unchecked Sendable {
                 VILogger.debug("[VIAudioPlayer] onDataReceived #\(dataChunkCount): \(data.count) bytes, total fed to decoder=\(sd.totalBytesReceived + Int64(data.count))")
             }
             sd.feed(data)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.notifyBufferState()
+            }
         }
 
         sd.onOutputFormatReady = { [weak self] format, dur in
@@ -339,6 +365,10 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
             if dur > 0 {
                 self.duration = dur
+            }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.delegate?.player(self, didUpdateTime: self.currentTime, duration: self.duration)
             }
             do {
                 try self.renderer.prepare(format: format)
@@ -390,6 +420,12 @@ public final class VIAudioPlayer: @unchecked Sendable {
             let stale: Bool = self.stateQueue.sync { thisLoad != self.loadGeneration }
             guard !stale else { return }
             VILogger.debug("[VIAudioPlayer] stream decoder error: \(error)")
+            let playerError = VIPlayerError.decoderCreationFailed(error)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.state = .failed(playerError)
+                self.delegate?.player(self, didReceiveError: playerError)
+            }
         }
 
         ps.onWaitingForNetworkChanged = { [weak self] waiting in
@@ -429,6 +465,20 @@ public final class VIAudioPlayer: @unchecked Sendable {
                 self.state = .failed(playerError)
                 self.delegate?.player(self, didReceiveError: playerError)
             }
+        }
+
+        let hint = VIStreamDecoder.fileTypeHint(for: ext)
+        do {
+            try sd.open(fileTypeHint: hint)
+        } catch {
+            VILogger.debug("[VIAudioPlayer] load: stream decoder open failed: \(error)")
+            let playerError = VIPlayerError.decoderCreationFailed(error)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.state = .failed(playerError)
+                self.delegate?.player(self, didReceiveError: playerError)
+            }
+            return
         }
 
         // Start streaming and periodic buffer checks
@@ -956,6 +1006,11 @@ public final class VIAudioPlayer: @unchecked Sendable {
                     self.notifyBufferState()
                 }
             } else if self.state == .buffering {
+                // While buffering, still surface duration once the stream decoder knows it (e.g. FFmpeg + Content-Length).
+                if self.duration == 0, let sd = self.streamDecoder, sd.duration > 0 {
+                    self.duration = sd.duration
+                    self.delegate?.player(self, didUpdateTime: self.currentTime, duration: self.duration)
+                }
                 self.checkBufferingToPlaying()
                 if self.isNetworkMode { self.notifyBufferState() }
             }

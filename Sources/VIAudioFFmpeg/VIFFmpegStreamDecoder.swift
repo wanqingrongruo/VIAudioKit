@@ -44,6 +44,8 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
     private var ringHead: Int = 0
     private var ringTail: Int = 0
     private var isRingClosed: Bool = false
+    private var isAborted: Bool = false
+    private var isSeeking: Bool = false
     private let ringCapacity = 10 * 1024 * 1024 // 10MB ring buffer
     
     private let stateLock = NSRecursiveLock()
@@ -51,6 +53,9 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
     
     private var decoderThread: Thread?
     private var _isFormatReady = false
+    public var fileExtension: String = ""
+    /// 仅用于诊断：限制 readData 日志条数，避免探测阶段刷屏
+    private var readDataLogSerial: Int = 0
     
     required public init() {
         ringBuffer = Data(count: ringCapacity)
@@ -62,6 +67,8 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
         defer { stateLock.unlock() }
         
         isRingClosed = false
+        isAborted = false
+        isSeeking = false
         ringHead = 0
         ringTail = 0
         
@@ -75,7 +82,7 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
             opaque,
             streamReadPacketCallback,
             nil,
-            streamSeekCallback
+            nil
         )
         
         if avioContext == nil {
@@ -91,6 +98,7 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
         }
         decoderThread?.name = "com.viaudiokit.ffmpeg.stream"
         decoderThread?.start()
+        VILogger.debug("[VIA_FFMPEG_PUSH] open() OK, decode thread started (ext=\(fileExtension))")
     }
     
     public func feed(_ data: Data) {
@@ -140,29 +148,43 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
     }
     
     public func resetForSeek() {
-        stateLock.lock()
         ringCondition.lock()
-        
+        isSeeking = true
         isRingClosed = false
+        
         ringHead = 0
         ringTail = 0
         totalBytesReceived = 0
         
+        ringCondition.broadcast()
+        ringCondition.unlock()
+        
+        stateLock.lock()
         if let codecCtx = codecContext {
             avcodec_flush_buffers(codecCtx)
         }
+        if let fmtCtx = formatContext {
+            if let pb = fmtCtx.pointee.pb {
+                pb.pointee.eof_reached = 0
+                pb.pointee.error = 0
+            }
+        }
         
-        ringCondition.broadcast()
+        ringCondition.lock()
+        isSeeking = false
         ringCondition.unlock()
+        
         stateLock.unlock()
     }
     
     public func close() {
-        stateLock.lock()
         ringCondition.lock()
+        isAborted = true
         isRingClosed = true
         ringCondition.broadcast()
         ringCondition.unlock()
+        
+        stateLock.lock()
         
         if let th = decoderThread, th.isExecuting {
             th.cancel()
@@ -196,12 +218,67 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
     public func updateDuration() {
         stateLock.lock()
         defer { stateLock.unlock() }
-        
-        guard let fmtCtx = formatContext else { return }
-        if fmtCtx.pointee.duration != CFFMPEG_AV_NOPTS_VALUE {
-            self.duration = Double(fmtCtx.pointee.duration) / Double(AV_TIME_BASE)
-        } else if contentLength > 0 && fmtCtx.pointee.bit_rate > 0 {
-            self.duration = Double(contentLength) * 8.0 / Double(fmtCtx.pointee.bit_rate)
+        recomputeDurationLocked()
+    }
+
+    /// Derives duration from FFmpeg metadata and, when needed, `Content-Length` + bitrate heuristics.
+    /// Network Opus/Vorbis in Ogg often reports `AV_NOPTS` duration and container `bit_rate == 0`, so we
+    /// also use per-stream duration, codec bit rates, and a conservative default bitrate when only size is known.
+    private func recomputeDurationLocked() {
+        guard let fmtCtx = formatContext, streamIndex >= 0 else { return }
+
+        let fmt = fmtCtx.pointee
+
+        if fmt.duration != CFFMPEG_AV_NOPTS_VALUE && fmt.duration > 0 {
+            let d = Double(fmt.duration) / Double(AV_TIME_BASE)
+            if d > 0 {
+                duration = d
+                return
+            }
+        }
+
+        guard let streamPtr = fmt.streams[Int(streamIndex)] else { return }
+        let st = streamPtr.pointee
+
+        if st.duration != CFFMPEG_AV_NOPTS_VALUE && st.duration > 0 {
+            let tb = st.time_base
+            if tb.den != 0 {
+                let q2d = Double(tb.num) / Double(tb.den)
+                let d = Double(st.duration) * q2d
+                if d > 0 {
+                    duration = d
+                    return
+                }
+            }
+        }
+
+        var br: Int64 = Int64(fmt.bit_rate)
+        if br <= 0, let cp = st.codecpar {
+            br = Int64(cp.pointee.bit_rate)
+        }
+        if br <= 0, let ctx = codecContext {
+            br = Int64(ctx.pointee.bit_rate)
+        }
+        // Opus/Vorbis and many lossy streams leave container bitrate at 0; estimate from file size for UI/seek.
+        if br <= 0, contentLength > 0 {
+            let cid = st.codecpar?.pointee.codec_id ?? AV_CODEC_ID_NONE
+            br = defaultBitrateForEstimate(codecId: cid)
+        }
+
+        if contentLength > 0, br > 0 {
+            duration = Double(contentLength) * 8.0 / Double(br)
+        }
+    }
+
+    /// Bits per second used only when FFmpeg reports no bitrate but we have `Content-Length` (typical Opus streaming).
+    private func defaultBitrateForEstimate(codecId: AVCodecID) -> Int64 {
+        switch codecId {
+        case AV_CODEC_ID_OPUS:
+            return 96_000
+        case AV_CODEC_ID_VORBIS:
+            return 128_000
+        default:
+            return 128_000
         }
     }
     
@@ -209,22 +286,53 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
     
     private func decodeLoop() {
         stateLock.lock()
-        var formatCtx = formatContext
+        
+        VILogger.debug("[VIA_FFMPEG_PUSH] decodeLoop started. fileExtension: \(fileExtension)")
+        let urlStr = fileExtension.isEmpty ? nil : "dummy.\(fileExtension)"
+        var openResult: Int32 = 0
+        if let urlStr = urlStr {
+            openResult = urlStr.withCString { ptr in
+                VILogger.debug("[VIA_FFMPEG_PUSH] avformat_open_input with url: \(String(cString: ptr))")
+                return avformat_open_input(&formatContext, ptr, nil, nil)
+            }
+        } else {
+            VILogger.debug("[VIA_FFMPEG_PUSH] avformat_open_input with nil url")
+            openResult = avformat_open_input(&formatContext, nil, nil, nil)
+        }
+        
+        VILogger.debug("[VIA_FFMPEG_PUSH] avformat_open_input result: \(openResult)")
         
         // This is a blocking call that will read from our IO callback
-        if avformat_open_input(&formatCtx, nil, nil, nil) < 0 {
+        if openResult < 0 {
+            formatContext = nil // Explicitly nil out just in case
             stateLock.unlock()
-            onError?(VIDecoderError.fileOpenFailed(-2))
+            
+            ringCondition.lock()
+            let aborted = isAborted
+            ringCondition.unlock()
+            
+            if !aborted {
+                onError?(VIDecoderError.fileOpenFailed(-2))
+            }
             return
         }
         
-        if avformat_find_stream_info(formatCtx, nil) < 0 {
+        let findStreamRet = avformat_find_stream_info(formatContext, nil)
+        VILogger.debug("[VIA_FFMPEG_PUSH] avformat_find_stream_info result: \(findStreamRet)")
+        if findStreamRet < 0 {
             stateLock.unlock()
-            onError?(VIDecoderError.fileOpenFailed(-3))
+            
+            ringCondition.lock()
+            let aborted = isAborted
+            ringCondition.unlock()
+            
+            if !aborted {
+                onError?(VIDecoderError.fileOpenFailed(-3))
+            }
             return
         }
         
-        let streamIdx = av_find_best_stream(formatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nil, 0)
+        let streamIdx = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nil, 0)
         if streamIdx < 0 {
             stateLock.unlock()
             onError?(VIDecoderError.unsupportedFormat("No audio stream found"))
@@ -232,7 +340,7 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
         }
         self.streamIndex = streamIdx
         
-        let stream = formatCtx!.pointee.streams[Int(streamIdx)]!
+        let stream = formatContext!.pointee.streams[Int(streamIdx)]!
         let codecParams = stream.pointee.codecpar!
         
         guard let codec = avcodec_find_decoder(codecParams.pointee.codec_id) else {
@@ -263,6 +371,10 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
         // Main Decoding Loop
         while !Thread.current.isCancelled {
             stateLock.lock()
+            // Content-Length often arrives after the first probe; refresh duration for Opus/Vorbis + size estimate.
+            if duration <= 0 && contentLength > 0 {
+                recomputeDurationLocked()
+            }
             guard let fmtCtx = formatContext, let codecCtx = codecContext, let pkt = packet, let frame = decodedFrame else {
                 stateLock.unlock()
                 break
@@ -271,7 +383,23 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
             let readRet = av_read_frame(fmtCtx, pkt)
             if readRet < 0 {
                 stateLock.unlock()
-                if readRet == CFFMPEG_AVERROR_EOF {
+                
+                ringCondition.lock()
+                let aborted = isAborted
+                let seeking = isSeeking
+                let closed = isRingClosed
+                ringCondition.unlock()
+                
+                if aborted {
+                    break
+                }
+                
+                if seeking {
+                    Thread.sleep(forTimeInterval: 0.01)
+                    continue
+                }
+                
+                if readRet == CFFMPEG_AVERROR_EOF || closed {
                     onEndOfStream?()
                 } else if readRet != CFFMPEG_AVERROR_EAGAIN {
                     onError?(VIDecoderError.decodeFailed(OSStatus(readRet)))
@@ -341,11 +469,18 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
         ringCondition.lock()
         defer { ringCondition.unlock() }
         
-        while ringHead == ringTail && !isRingClosed {
+        readDataLogSerial += 1
+        let n = readDataLogSerial
+        if n <= 12 || n % 400 == 0 {
+            VILogger.debug("[VIA_FFMPEG_PUSH] readData #\(n) requested size: \(size)")
+        }
+        
+        while ringHead == ringTail && !isRingClosed && !isAborted && !isSeeking {
             ringCondition.wait()
         }
         
-        if ringHead == ringTail && isRingClosed {
+        if isAborted || isSeeking || (ringHead == ringTail && isRingClosed) {
+            VILogger.debug("[VIA_FFMPEG_PUSH] readData EOF (#\(n)) aborted:\(isAborted) seeking:\(isSeeking) closed:\(isRingClosed)")
             return CFFMPEG_AVERROR_EOF
         }
         
@@ -357,6 +492,9 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
         }
         
         let toRead = min(Int(size), available)
+        if n <= 12 || n % 400 == 0 {
+            VILogger.debug("[VIA_FFMPEG_PUSH] readData #\(n) → \(toRead) bytes (available \(available))")
+        }
         let firstPart = min(toRead, ringCapacity - ringHead)
         
         ringBuffer.withUnsafeBytes { rbPtr in
@@ -379,17 +517,4 @@ private func streamReadPacketCallback(opaque: UnsafeMutableRawPointer?, buf: Uns
     guard let opaque = opaque, let buf = buf else { return 0 }
     let decoder = Unmanaged<VIFFmpegStreamDecoder>.fromOpaque(opaque).takeUnretainedValue()
     return decoder.readData(buf: buf, size: buf_size)
-}
-
-private func streamSeekCallback(opaque: UnsafeMutableRawPointer?, offset: Int64, whence: Int32) -> Int64 {
-    guard let opaque = opaque else { return -1 }
-    let decoder = Unmanaged<VIFFmpegStreamDecoder>.fromOpaque(opaque).takeUnretainedValue()
-    
-    if whence == AVSEEK_SIZE {
-        return decoder.contentLength > 0 ? decoder.contentLength : -1
-    }
-    
-    // Stream mode doesn't support random access seek directly through avio.
-    // Seek is handled by pushing new data after resetting.
-    return -1
 }

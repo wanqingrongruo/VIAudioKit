@@ -88,6 +88,8 @@ final class AudioPlayerDemoController: UIViewController {
     }()
     private var currentIndex: Int = -1
     private var lastCacheUpdateTime: Date?
+    /// Bumps when switching tracks so stale `updateCacheInfo()` completions cannot overwrite the new row’s UI.
+    private var cacheInfoGeneration: Int = 0
 
     // MARK: - UI Components
 
@@ -443,15 +445,24 @@ final class AudioPlayerDemoController: UIViewController {
         let wasPlaying = player.isPlaying
         
         currentIndex = index
+        cacheInfoGeneration += 1
+        lastCacheUpdateTime = nil
+
         let item = audioItems[index]
         titleLabel.text = item.title
         bufferProgressView.progress = 0
         progressSlider.value = 0
         currentTimeLabel.text = "00:00"
         durationLabel.text = "00:00"
+        if item.isLocal {
+            cacheLabel.text = "Cache: local file"
+        } else {
+            cacheLabel.text = "Cache: …"
+        }
         
         player.load(url: item.url)
-        
+        updateCacheInfo()
+
         if wasPlaying {
             player.play()
         }
@@ -470,13 +481,26 @@ final class AudioPlayerDemoController: UIViewController {
         return String(format: "%02d:%02d", m, s)
     }
 
+    /// Keeps time labels + slider aligned with `VIAudioPlayer` when state changes (e.g. new track loads).
+    private func syncProgressLabelsFromPlayer(_ player: VIAudioPlayer) {
+        currentTimeLabel.text = formatTime(player.currentTime)
+        durationLabel.text = formatTime(player.duration)
+        if player.duration > 0 {
+            progressSlider.value = Float(player.currentTime / player.duration)
+        } else {
+            progressSlider.value = 0
+        }
+    }
+
     private func updateCacheInfo() {
         guard currentIndex >= 0, currentIndex < audioItems.count else { return }
         let item = audioItems[currentIndex]
+        let generation = cacheInfoGeneration
         cacheInfoQueue.async { [weak self] in
             guard let self else { return }
             if item.isLocal {
                 DispatchQueue.main.async {
+                    guard generation == self.cacheInfoGeneration else { return }
                     self.cacheLabel.text = "Cache: local file"
                 }
                 return
@@ -485,6 +509,7 @@ final class AudioPlayerDemoController: UIViewController {
             let status = self.player.cacheStatus(for: item.url)
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
+                guard generation == self.cacheInfoGeneration else { return }
                 switch status {
                 case .none:
                     self.cacheLabel.text = "Cache: none"
@@ -531,9 +556,10 @@ extension AudioPlayerDemoController: VIAudioPlayerDelegate {
         case .preparing:
             stateLabel.text = "Preparing..."
             bufferingIndicator.startAnimating()
+            syncProgressLabelsFromPlayer(player)
         case .ready:
             stateLabel.text = "Ready"
-            durationLabel.text = formatTime(player.duration)
+            syncProgressLabelsFromPlayer(player)
             updatePlayPauseIcon(playing: false)
             bufferingIndicator.stopAnimating()
         case .playing:
@@ -548,6 +574,7 @@ extension AudioPlayerDemoController: VIAudioPlayerDelegate {
             stateLabel.text = "Buffering"
             updatePlayPauseIcon(playing: false)
             bufferingIndicator.startAnimating()
+            syncProgressLabelsFromPlayer(player)
         case .finished:
             stateLabel.text = "Finished"
             updatePlayPauseIcon(playing: false)
@@ -569,17 +596,23 @@ extension AudioPlayerDemoController: VIAudioPlayerDelegate {
             progressSlider.value = Float(currentTime / duration)
         }
         
+        throttledUpdateCacheInfo()
+    }
+
+    func player(_ player: VIAudioPlayer, didUpdateBuffer state: VIBufferState) {
+        // UI relies on updateCacheInfo() to update bufferProgressView with overall download progress,
+        // so we don't overwrite it with the 0-2s playback buffer state here.
+        // However, we do want to poll cache progress while downloading/buffering (even if paused/not playing).
+        throttledUpdateCacheInfo()
+    }
+
+    private func throttledUpdateCacheInfo() {
         let now = Date()
         if let last = lastCacheUpdateTime, now.timeIntervalSince(last) < 1.0 {
             return
         }
         lastCacheUpdateTime = now
         updateCacheInfo()
-    }
-
-    func player(_ player: VIAudioPlayer, didUpdateBuffer state: VIBufferState) {
-        // UI relies on updateCacheInfo() to update bufferProgressView with overall download progress,
-        // so we don't overwrite it with the 0-2s playback buffer state here.
     }
 
     func player(_ player: VIAudioPlayer, didReceiveError error: VIPlayerError) {

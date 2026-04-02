@@ -2,10 +2,10 @@ Pod::Spec.new do |s|
   s.name         = 'VIAudioKit'
   s.version      = '0.1.0'
   s.summary      = 'Cross-platform audio player with chunked downloading, custom decoding and AVAudioEngine rendering.'
-  s.homepage     = 'https://github.com/example/VIAudioKit'
+  s.homepage     = 'https://github.com/wanqingrongruo/VIAudioKit'
   s.license      = { :type => 'MIT', :file => 'LICENSE' }
-  s.author       = { 'VIAudioKit' => 'dev@example.com' }
-  s.source       = { :git => 'https://github.com/example/VIAudioKit.git', :tag => s.version.to_s }
+  s.author       = { 'VIAudioKit' => 'wanqingrongruo' }
+  s.source       = { :git => 'https://github.com/wanqingrongruo/VIAudioKit.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '15.0'
   s.osx.deployment_target = '12.0'

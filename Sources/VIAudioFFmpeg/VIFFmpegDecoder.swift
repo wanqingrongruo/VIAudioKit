@@ -73,23 +73,23 @@ public final class VIFFmpegDecoder: VIAudioDecoding {
         formatContext?.pointee.pb = avioContext
         
         // 4. Open input
-        var formatCtx = formatContext
-        if avformat_open_input(&formatCtx, nil, nil, nil) < 0 {
+        if avformat_open_input(&formatContext, nil, nil, nil) < 0 {
+            formatContext = nil // Explicitly nil out to prevent double-free
             throw VIDecoderError.fileOpenFailed(-2)
         }
         
-        if avformat_find_stream_info(formatCtx, nil) < 0 {
+        if avformat_find_stream_info(formatContext, nil) < 0 {
             throw VIDecoderError.fileOpenFailed(-3)
         }
         
         // 5. Find audio stream
-        let streamIdx = av_find_best_stream(formatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nil, 0)
+        let streamIdx = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nil, 0)
         if streamIdx < 0 {
             throw VIDecoderError.unsupportedFormat("No audio stream found")
         }
         self.streamIndex = streamIdx
         
-        let stream = formatCtx!.pointee.streams[Int(streamIdx)]!
+        let stream = formatContext!.pointee.streams[Int(streamIdx)]!
         let codecParams = stream.pointee.codecpar!
         
         guard let codec = avcodec_find_decoder(codecParams.pointee.codec_id) else {
@@ -106,8 +106,8 @@ public final class VIFFmpegDecoder: VIAudioDecoding {
         }
         
         // Calculate duration
-        if formatCtx!.pointee.duration != CFFMPEG_AV_NOPTS_VALUE {
-            self.duration = Double(formatCtx!.pointee.duration) / Double(AV_TIME_BASE)
+        if formatContext!.pointee.duration != CFFMPEG_AV_NOPTS_VALUE {
+            self.duration = Double(formatContext!.pointee.duration) / Double(AV_TIME_BASE)
         }
         
         self.packet = av_packet_alloc()
@@ -117,7 +117,7 @@ public final class VIFFmpegDecoder: VIAudioDecoding {
         var dummyFrame: UnsafeMutablePointer<AVFrame>? = av_frame_alloc()
         var gotFrame = false
         var firstPkt: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
-        while av_read_frame(formatCtx, firstPkt) >= 0 {
+        while av_read_frame(formatContext, firstPkt) >= 0 {
             if firstPkt?.pointee.stream_index == self.streamIndex {
                 if avcodec_send_packet(codecContext, firstPkt) == 0 {
                     if avcodec_receive_frame(codecContext, dummyFrame) == 0 {
@@ -135,7 +135,7 @@ public final class VIFFmpegDecoder: VIAudioDecoding {
             do {
                 self._outputFormat = try resampler.configure(with: df)
                 // Rewind to beginning
-                av_seek_frame(formatCtx, self.streamIndex, 0, AVSEEK_FLAG_BACKWARD)
+                av_seek_frame(formatContext, self.streamIndex, 0, AVSEEK_FLAG_BACKWARD)
                 avcodec_flush_buffers(codecContext)
             } catch {
                 av_frame_free(&dummyFrame)
