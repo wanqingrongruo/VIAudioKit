@@ -287,8 +287,8 @@ idle → preparing → ready → playing ⇄ paused
                    failed
 ```
 
-- **网络模式**：`load()` → `preparing` → `buffering` → `playing`（自动，需先调 `play()`）
-- **本地模式**：`load()` → `preparing` → `ready` → `playing`（需手动调 `play()`）
+- **网络模式**：`load()` → `preparing` → `buffering` → `playing`（支持预触发：`preparing` 或 `buffering` 阶段调用 `play()` 即可在就绪后自动播放）
+- **本地模式**：`load()` → `preparing` → `ready` → `playing`（支持预触发：`preparing` 阶段调用 `play()` 即可在就绪后自动播放）
 - **缓冲恢复**：`playing` → `buffering`（欠载）→ `playing`（自动恢复）
 
 ## 系统要求
