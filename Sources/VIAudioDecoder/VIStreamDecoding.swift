@@ -70,3 +70,7 @@ public protocol VIStreamDecoding: AnyObject {
     /// Recalculate duration after content length becomes available.
     func updateDuration()
 }
+
+public protocol VIStreamDecodingWithExtension: VIStreamDecoding {
+    var fileExtension: String { get set }
+}

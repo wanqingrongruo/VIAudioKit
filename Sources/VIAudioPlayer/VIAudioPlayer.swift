@@ -296,8 +296,8 @@ public final class VIAudioPlayer: @unchecked Sendable {
         
         let sd = sdType.init()
         sd.framesPerBuffer = configuration.framesPerBuffer
-        if let ffsd = sd as? VIFFmpegStreamDecoder {
-            ffsd.fileExtension = ext
+        if var extSd = sd as? VIStreamDecodingWithExtension {
+            extSd.fileExtension = ext
         }
 
         self.pushSource = ps

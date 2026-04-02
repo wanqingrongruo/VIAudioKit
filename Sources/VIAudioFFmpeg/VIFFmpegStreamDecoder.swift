@@ -10,7 +10,7 @@ import CFFmpeg
 
 /// Decoder implementation using FFmpeg C API for streaming (push model).
 /// Supports OGG, WMA, APE, FLAC, M4A, etc.
-public final class VIFFmpegStreamDecoder: VIStreamDecoding {
+public final class VIFFmpegStreamDecoder: VIStreamDecodingWithExtension {
     
     public static let supportedExtensions: Set<String> = [
         "ogg", "oga", "opus", "wma", "ape", "wv"
