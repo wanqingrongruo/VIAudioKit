@@ -10,6 +10,7 @@
 #endif
 #endif
 
+#import "CFFmpeg.h"
 
 FOUNDATION_EXPORT double VIAudioKitVersionNumber;
 FOUNDATION_EXPORT const unsigned char VIAudioKitVersionString[];

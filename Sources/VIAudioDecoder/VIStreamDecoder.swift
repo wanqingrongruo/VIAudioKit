@@ -59,9 +59,13 @@ public final class VIStreamDecoder: VIStreamDecoding {
 
     private let lock = NSLock()
 
+    public static let supportedExtensions: Set<String> = [
+        "mp3", "aac", "m4a", "mp4", "flac", "wav", "aiff", "aif", "caf"
+    ]
+
     // MARK: - Init
 
-    public init() {}
+    required public init() {}
 
     // MARK: - Open / Close
 

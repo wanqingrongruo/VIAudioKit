@@ -13,6 +13,9 @@ public protocol VIStreamDecoding: AnyObject {
 
     // MARK: - Callbacks
 
+    /// File extensions this decoder handles (lowercase, without dot), e.g. `["mp3", "aac"]`.
+    static var supportedExtensions: Set<String> { get }
+
     /// Called when the output PCM format and estimated duration become available.
     var onOutputFormatReady: ((_ format: AVAudioFormat, _ duration: TimeInterval) -> Void)? { get set }
 
@@ -44,7 +47,7 @@ public protocol VIStreamDecoding: AnyObject {
 
     // MARK: - Lifecycle
 
-    /// Open the decoder, preparing it to receive data.
+    init()
     /// - Parameter fileTypeHint: An `AudioFileTypeID` hint (0 = unknown).
     func open(fileTypeHint: AudioFileTypeID) throws
 

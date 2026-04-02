@@ -2,6 +2,10 @@ import UIKit
 import VIAudioKit
 import QuartzCore
 
+#if canImport(VIAudioFFmpeg)
+import VIAudioFFmpeg
+#endif
+
 // MARK: - Audio Item
 
 struct AudioItem {
@@ -17,7 +21,7 @@ final class AudioPlayerDemoController: UIViewController {
     // ============================================================
     // MARK: Audio items — local files auto-discovered, add remote URLs below
     // ============================================================
-    private static let supportedExtensions = ["mp3", "aac", "m4a", "mp4", "flac", "alac", "wav", "aiff", "caf", "ogg", "wma"]
+    private static let supportedExtensions = ["mp3", "aac", "m4a", "mp4", "flac", "alac", "wav", "aiff", "caf", "ogg", "wma", "opus"]
 
     private lazy var audioItems: [AudioItem] = {
         var items: [AudioItem] = []
@@ -46,12 +50,42 @@ final class AudioPlayerDemoController: UIViewController {
             isLocal: false
         ))
 
+        // FFmpeg test URLs
+        items.append(AudioItem(
+            title: "天空之城aac-url",
+            url: URL(string: "https://leafli.oss-cn-shanghai.aliyuncs.com/%E9%9F%B3%E9%A2%91/%E5%A4%A9%E7%A9%BA%E4%B9%8B%E5%9F%8E.aac")!,
+            isLocal: false
+        ))
+        
+        items.append(AudioItem(
+            title: "天空之城ogg-url",
+            url: URL(string: "https://leafli.oss-cn-shanghai.aliyuncs.com/%E9%9F%B3%E9%A2%91/%E5%A4%A9%E7%A9%BA%E4%B9%8B%E5%9F%8E.ogg")!,
+            isLocal: false
+        ))
+        
+        items.append(AudioItem(
+            title: "天空之城opus-url",
+            url: URL(string: "https://leafli.oss-cn-shanghai.aliyuncs.com/%E9%9F%B3%E9%A2%91/%E5%A4%A9%E7%A9%BA%E4%B9%8B%E5%9F%8E.opus")!,
+            isLocal: false
+        ))
+        
+        items.append(AudioItem(
+            title: "天空之城wma-url",
+            url: URL(string: "https://leafli.oss-cn-shanghai.aliyuncs.com/%E9%9F%B3%E9%A2%91/%E5%A4%A9%E7%A9%BA%E4%B9%8B%E5%9F%8E.wma")!,
+            isLocal: false
+        ))
+
         return items
     }()
 
     // MARK: - Player
 
-    private let player = VIAudioPlayer()
+    private let player: VIAudioPlayer = {
+        let p = VIAudioPlayer()
+        p.decoderTypes.append(VIFFmpegDecoder.self)
+        p.streamDecoderTypes.append(VIFFmpegStreamDecoder.self)
+        return p
+    }()
     private var currentIndex: Int = -1
     private var lastCacheUpdateTime: Date?
 

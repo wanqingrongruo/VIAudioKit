@@ -1,8 +1,7 @@
 CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO
 CONFIGURATION_BUILD_DIR = ${PODS_CONFIGURATION_BUILD_DIR}/VIAudioKit
+FRAMEWORK_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/ffmpeg-kit-ios-full/ffmpeg-kit-ios-full" "${PODS_XCFRAMEWORKS_BUILD_DIR}/ffmpeg-kit-ios-full"
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
-LIBRARY_SEARCH_PATHS = $(inherited) "${TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}" /usr/lib/swift
-OTHER_LDFLAGS = $(inherited) -framework "AVFoundation" -framework "AudioToolbox" -framework "CryptoKit" -framework "Foundation" -framework "Network"
 OTHER_SWIFT_FLAGS = $(inherited) -D COCOAPODS
 PODS_BUILD_DIR = ${BUILD_DIR}
 PODS_CONFIGURATION_BUILD_DIR = ${PODS_BUILD_DIR}/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)
@@ -13,4 +12,6 @@ PODS_XCFRAMEWORKS_BUILD_DIR = $(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkInterme
 PRODUCT_BUNDLE_IDENTIFIER = org.cocoapods.${PRODUCT_NAME:rfc1034identifier}
 SKIP_INSTALL = YES
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = COCOAPODS
+SWIFT_INCLUDE_PATHS = $(inherited) $(PODS_TARGET_SRCROOT)/Sources/VIAudioFFmpeg/include
+USER_HEADER_SEARCH_PATHS = $(inherited) ${PODS_ROOT}/ffmpeg-kit-ios-full/ffmpegkit.xcframework/ios-arm64/ffmpegkit.framework/Headers
 USE_RECURSIVE_SCRIPT_INPUTS_IN_SCRIPT_PHASES = YES

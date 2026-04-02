@@ -121,9 +121,9 @@ public final class VIAudioPlayer: @unchecked Sendable {
     /// Registry of pull-mode decoder types. Add custom decoders here.
     public var decoderTypes: [VIAudioDecoding.Type] = [VINativeDecoder.self]
 
-    /// Factory for creating push-mode (stream) decoders. Override to provide a custom
-    /// `VIStreamDecoding` implementation instead of the default `VIStreamDecoder`.
-    public var streamDecoderFactory: () -> VIStreamDecoding = { VIStreamDecoder() }
+    /// Registry of push-mode (stream) decoder types.
+    /// The player iterates through these and picks the first one supporting the file extension.
+    public var streamDecoderTypes: [VIStreamDecoding.Type] = [VIStreamDecoder.self]
 
     // MARK: - Init
 
@@ -276,7 +276,12 @@ public final class VIAudioPlayer: @unchecked Sendable {
             cacheManager: downloader.cacheManager,
             configuration: configuration.downloaderConfiguration
         )
-        let sd = streamDecoderFactory()
+        // Push-mode (network files)
+        let sdType = streamDecoderTypes.first(where: {
+            $0.supportedExtensions.contains(ext)
+        }) ?? VIStreamDecoder.self
+        
+        let sd = sdType.init()
         sd.framesPerBuffer = configuration.framesPerBuffer
 
         self.pushSource = ps

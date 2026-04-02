@@ -16,7 +16,10 @@
 		909C8A7F91E0E78F022112F5 /* 叹服原版伴奏.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AF22852A37ADB1164174C53D /* 叹服原版伴奏.mp3 */; };
 		9167F19FF8C6E12D057BBC29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0E09AB4C7A09BA9D7B64ED /* AppDelegate.swift */; };
 		A08471665ED73E15BA92DB6C /* AudioPlayerDemoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C73EF0E18AB7EDC247151F6 /* AudioPlayerDemoController.swift */; };
-		E0EA600D2F7D0BFE00EC00B1 /* demo.wma in Resources */ = {isa = PBXBuildFile; fileRef = E0EA600C2F7D0BFE00EC00B1 /* demo.wma */; };
+		E08B872C2F7E3E2B0054EB4B /* 天空之城.wma in Resources */ = {isa = PBXBuildFile; fileRef = E08B872B2F7E3E2B0054EB4B /* 天空之城.wma */; };
+		E08B872D2F7E3E2B0054EB4B /* 天空之城.ogg in Resources */ = {isa = PBXBuildFile; fileRef = E08B872A2F7E3E2B0054EB4B /* 天空之城.ogg */; };
+		E08B87302F7E3F3D0054EB4B /* 天空之城.aac in Resources */ = {isa = PBXBuildFile; fileRef = E08B872E2F7E3F3D0054EB4B /* 天空之城.aac */; };
+		E08B87312F7E3F3D0054EB4B /* 天空之城.opus in Resources */ = {isa = PBXBuildFile; fileRef = E08B872F2F7E3F3D0054EB4B /* 天空之城.opus */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +34,10 @@
 		AF22852A37ADB1164174C53D /* 叹服原版伴奏.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "叹服原版伴奏.mp3"; sourceTree = "<group>"; };
 		B779FAAABF912DDB36456921 /* Pods_VIAudioKitDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_VIAudioKitDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB0E09AB4C7A09BA9D7B64ED /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		E0EA600C2F7D0BFE00EC00B1 /* demo.wma */ = {isa = PBXFileReference; lastKnownFileType = file; path = demo.wma; sourceTree = "<group>"; };
+		E08B872A2F7E3E2B0054EB4B /* 天空之城.ogg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "天空之城.ogg"; sourceTree = "<group>"; };
+		E08B872B2F7E3E2B0054EB4B /* 天空之城.wma */ = {isa = PBXFileReference; lastKnownFileType = file; path = "天空之城.wma"; sourceTree = "<group>"; };
+		E08B872E2F7E3F3D0054EB4B /* 天空之城.aac */ = {isa = PBXFileReference; lastKnownFileType = file; path = "天空之城.aac"; sourceTree = "<group>"; };
+		E08B872F2F7E3F3D0054EB4B /* 天空之城.opus */ = {isa = PBXFileReference; lastKnownFileType = file; path = "天空之城.opus"; sourceTree = "<group>"; };
 		E39F70250B9BD85C2CD6A6A9 /* Pods-VIAudioKitDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VIAudioKitDemo.release.xcconfig"; path = "Target Support Files/Pods-VIAudioKitDemo/Pods-VIAudioKitDemo.release.xcconfig"; sourceTree = "<group>"; };
 		E433A45A045B32FE302D121E /* 天空之城.flac */ = {isa = PBXFileReference; lastKnownFileType = file; path = "天空之城.flac"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -91,7 +97,10 @@
 				2E62E2761F6CAA3DE72A8506 /* 灰色头像原版伴奏.mp3 */,
 				AF22852A37ADB1164174C53D /* 叹服原版伴奏.mp3 */,
 				E433A45A045B32FE302D121E /* 天空之城.flac */,
-				E0EA600C2F7D0BFE00EC00B1 /* demo.wma */,
+				E08B872A2F7E3E2B0054EB4B /* 天空之城.ogg */,
+				E08B872B2F7E3E2B0054EB4B /* 天空之城.wma */,
+				E08B872E2F7E3F3D0054EB4B /* 天空之城.aac */,
+				E08B872F2F7E3F3D0054EB4B /* 天空之城.opus */,
 				40481BD6C38EC50A62A286CC /* 童话镇.flac */,
 				DB0E09AB4C7A09BA9D7B64ED /* AppDelegate.swift */,
 				2C73EF0E18AB7EDC247151F6 /* AudioPlayerDemoController.swift */,
@@ -159,9 +168,12 @@
 				22DFCBCB81D5D93E7FBB7779 /* 关于郑州的记忆.flac in Resources */,
 				909C8A7F91E0E78F022112F5 /* 叹服原版伴奏.mp3 in Resources */,
 				5250426FBB0B09FD98B3334C /* 天空之城.flac in Resources */,
-				E0EA600D2F7D0BFE00EC00B1 /* demo.wma in Resources */,
 				743B4C3C3C5725A584C3F0BB /* 灰色头像原版伴奏.mp3 in Resources */,
+				E08B872C2F7E3E2B0054EB4B /* 天空之城.wma in Resources */,
+				E08B872D2F7E3E2B0054EB4B /* 天空之城.ogg in Resources */,
 				42B30BFD0B67B866E687BF90 /* 童话镇.flac in Resources */,
+				E08B87302F7E3F3D0054EB4B /* 天空之城.aac in Resources */,
+				E08B87312F7E3F3D0054EB4B /* 天空之城.opus in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

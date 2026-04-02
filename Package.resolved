@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "ffmpeg-kit-spm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/yangliu-1995/ffmpeg-kit-spm",
+      "state" : {
+        "revision" : "1e881126683aef6d2686b479acb67a261efc5a40",
+        "version" : "6.0.0"
+      }
+    }
+  ],
+  "version" : 2
+}
