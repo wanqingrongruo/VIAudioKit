@@ -24,8 +24,8 @@ Pod::Spec.new do |s|
   s.subspec 'FFmpeg' do |ffmpeg|
     ffmpeg.dependency 'VIAudioKit/Core'
     ffmpeg.dependency 'ffmpeg-kit-ios-full'
-    ffmpeg.source_files = 'Sources/VIAudioFFmpeg/**/*.{swift,h,m,c}'
-    ffmpeg.preserve_paths = 'Sources/VIAudioFFmpeg/include/module.modulemap'
+    ffmpeg.source_files = 'Sources/VIAudioFFmpeg/**/*.{swift,m,c}'
+    ffmpeg.preserve_paths = 'Sources/VIAudioFFmpeg/include/module.modulemap', 'Sources/VIAudioFFmpeg/include/**/*.h'
     ffmpeg.pod_target_xcconfig = { 
       'SWIFT_ACTIVE_COMPILATION_CONDITIONS' => 'COCOAPODS',
       'SWIFT_INCLUDE_PATHS' => '$(PODS_TARGET_SRCROOT)/Sources/VIAudioFFmpeg/include',

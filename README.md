@@ -6,11 +6,14 @@
 
 - **多平台**：iOS 15+ / macOS 12+
 - **本地 + 网络**：自动识别 `file://` 与 `http(s)://`，无需手动区分
-- **多格式**：MP3、AAC、M4A、FLAC、WAV、AIFF、CAF 等（基于 Apple AudioToolbox），可通过 `VIAudioDecoding` 协议扩展自定义解码器
+- **多格式支持**：
+  - **内置支持**：MP3, AAC, M4A, FLAC, WAV, AIFF, CAF 等（基于 Apple AudioToolbox）
+  - **FFmpeg 扩展**：OGG, OPUS, WMA, APE 等复杂格式（通过可选的 `VIAudioFFmpeg` 模块集成 FFmpegKit）
 - **分片下载与缓存**：HTTP Range 请求分片下载，LRU 缓存淘汰，支持 seek 时按需下载，同一音频不同 URL 可映射为相同缓存键
 - **变速播放**：通过 `AVAudioUnitTimePitch` 实现 0.5x – 2.0x 变速
-- **缓冲状态机**：可配置的缓冲阈值（初始播放 / seek 后 / 欠载恢复），自动网络恢复重试
-- **双集成方式**：Swift Package Manager 和 CocoaPods 均支持
+- **缓冲状态机**：可配置的缓冲阈值（初始起播 / seek 后 / 欠载恢复），自动网络恢复重试
+- **完善的日志系统**：提供 `VILogging` 协议，可自由接入你的业务日志组件（如 CocoaLumberjack）
+- **双集成方式**：支持 Swift Package Manager 和 CocoaPods
 
 ## 架构
 
@@ -19,15 +22,15 @@
 │                    VIAudioPlayer                     │
 │  (状态机 · 缓冲控制 · 对外 API · Delegate 回调)       │
 ├───────────────────────┬─────────────────────────────┤
-│   本地路径 (Pull)      │     网络路径 (Push)          │
+│   本地路径 (Pull)      │     网络流式 (Push)          │
 │                       │                             │
 │  VILocalFileSource    │  VIPushAudioSource           │
 │       ↓               │  (NWPathMonitor · 自动重试)  │
 │  VINativeDecoder      │       ↓                     │
-│  (ExtAudioFile)       │  VIStreamDecoder             │
-│       ↓               │  (AudioFileStream +          │
-│  VIAudioBufferQueue   │   AudioConverter)            │
+│  VIFFmpegDecoder      │  VIStreamDecoder             │
+│                       │  VIFFmpegStreamDecoder       │
 │       ↓               │       ↓                     │
+│  VIAudioBufferQueue   │   VIAudioBufferQueue        │
 ├───────────────────────┴─────────────────────────────┤
 │                   VIAudioRenderer                    │
 │  (AVAudioEngine · AVAudioPlayerNode · TimePitch)     │
@@ -43,36 +46,23 @@
 |---|---|---|
 | **VIAudioPlayer** | `Sources/VIAudioPlayer/` | 播放器核心：状态机、缓冲控制、时间进度、对外 API |
 | **VIAudioDecoder** | `Sources/VIAudioDecoder/` | 解码层：`VINativeDecoder`（本地 Pull）、`VIStreamDecoder`（网络 Push）、`VIPushAudioSource`（网络数据源） |
-| **VIAudioDownloader** | `Sources/VIAudioDownloader/` | 下载缓存层：分片下载、Range 请求、LRU 缓存管理，可独立使用 |
-
-### 关键文件
-
-```
-Sources/
-├── VIAudioPlayer/
-│   ├── VIAudioPlayer.swift        # 播放器主类，对外 API
-│   ├── VIAudioRenderer.swift      # AVAudioEngine 封装
-│   ├── VIAudioBufferQueue.swift   # 线程安全 PCM Buffer 队列
-│   ├── VIPlayerConfiguration.swift # 播放器配置
-│   └── VIPlayerState.swift        # 状态枚举、错误类型
-├── VIAudioDecoder/
-│   ├── VIAudioDecoding.swift      # 解码器协议（可扩展）
-│   ├── VINativeDecoder.swift      # 本地文件解码器（ExtAudioFile）
-│   ├── VIStreamDecoder.swift      # 流式解码器（AudioFileStream + AudioConverter）
-│   ├── VIPushAudioSource.swift    # 网络推送数据源（含网络恢复、重试）
-│   ├── VIAudioSource.swift        # 数据源协议
-│   └── VILocalFileSource.swift    # 本地文件数据源
-└── VIAudioDownloader/
-    ├── VIChunkedDownloader.swift   # 分片下载器
-    ├── VICacheManager.swift        # 缓存索引管理
-    ├── VICacheUnit.swift           # 单个音频的缓存单元
-    ├── VICacheSegment.swift        # 缓存分片
-    ├── VIDownloaderConfiguration.swift # 下载器配置
-    ├── VIDownloadTask.swift        # 单次下载任务
-    └── VIRangeRequest.swift        # HTTP Range 请求
-```
+| **VIAudioDownloader** | `Sources/VIAudioDownloader/` | 下载缓存层：分片下载、Range 请求、LRU 缓存、日志系统 `VILogger` |
+| **VIAudioFFmpeg** | `Sources/VIAudioFFmpeg/` | *(可选模块)* FFmpeg 扩展解码层，支持 OGG/OPUS/WMA/APE，包含 Push 和 Pull 两种解码器实现 |
 
 ## 集成
+
+### CocoaPods
+
+在 Podfile 中可以按需引入模块：
+
+```ruby
+# 仅引入核心功能 (AudioToolbox 支持的常规格式)
+pod 'VIAudioKit', :path => '../VIAudioKit'
+
+# 如果需要支持 OGG/WMA 等扩展格式，引入 FFmpeg subspec:
+pod 'VIAudioKit', :path => '../VIAudioKit', :subspecs => ['Core', 'FFmpeg']
+```
+*注意：如果引入了 FFmpeg，需要在 Podfile 顶部指定静态链接：`use_frameworks! :linkage => :static`。*
 
 ### Swift Package Manager
 
@@ -82,20 +72,11 @@ dependencies: [
     .package(url: "https://github.com/example/VIAudioKit.git", from: "0.1.0")
 ]
 
-// Target
-.target(dependencies: ["VIAudioPlayer"])
-```
-
-只引入 `VIAudioPlayer` 即可，它会自动依赖 `VIAudioDecoder` 和 `VIAudioDownloader`。
-
-如果只需要下载缓存功能，可以单独引入 `VIAudioDownloader`。
-
-### CocoaPods
-
-```ruby
-pod 'VIAudioKit', :path => '../VIAudioKit'
-# 或远程
-# pod 'VIAudioKit', '~> 0.1.0'
+// Target 依赖
+.target(dependencies: [
+    .product(name: "VIAudioPlayer", package: "VIAudioKit"),
+    .product(name: "VIAudioFFmpeg", package: "VIAudioKit") // 可选 FFmpeg
+])
 ```
 
 ## 快速上手
@@ -103,18 +84,24 @@ pod 'VIAudioKit', :path => '../VIAudioKit'
 ### 基本播放
 
 ```swift
-import VIAudioKit  // CocoaPods
-// import VIAudioPlayer  // SPM
+import VIAudioKit  
+// 如果集成了 FFmpeg，额外 import:
+// import VIAudioFFmpeg
 
 let player = VIAudioPlayer()
+
+// 若需要 OGG/OPUS 等格式支持，注册 FFmpeg 解码器：
+player.decoderTypes.append(VIFFmpegDecoder.self)
+player.streamDecoderTypes.append(VIFFmpegStreamDecoder.self)
+
 player.delegate = self
 
 // 播放本地文件
 player.load(url: Bundle.main.url(forResource: "song", withExtension: "flac")!)
 player.play()
 
-// 播放网络音频
-player.load(url: URL(string: "https://example.com/song.mp3")!)
+// 播放网络音频（缓冲状态会自动通过 Delegate 通知）
+player.load(url: URL(string: "https://example.com/song.opus")!)
 player.play()
 ```
 
@@ -136,30 +123,41 @@ extension ViewController: VIAudioPlayerDelegate {
     }
 
     func player(_ player: VIAudioPlayer, didUpdateTime currentTime: TimeInterval, duration: TimeInterval) {
-        // 更新进度条
+        // 更新播放进度、总时长
+    }
+    
+    func player(_ player: VIAudioPlayer, didUpdateBuffer state: VIBufferState) {
+        // 监控底部缓冲队列健康度 (.empty, .buffering(progress:), .sufficient, .full)
     }
 
     func player(_ player: VIAudioPlayer, didReceiveError error: VIPlayerError) {
-        // 处理错误
+        // 处理运行期错误
     }
 }
 ```
 
-### 控制播放
+### 接入自定义日志组件
+
+你可以通过实现 `VILogging` 协议，将 VIAudioKit 的内部运行日志（含网络异常、解码丢包等）统一转发到你 App 的日志系统中。
 
 ```swift
-player.play()
-player.pause()
-player.stop()
+import VIAudioKit
 
-// Seek（秒）
-player.seek(to: 30.0)
+class MyAppLogger: VILogging {
+    func log(level: VILogLevel, message: String) {
+        switch level {
+        case .debug:   MyLogger.debug("AudioKit: \(message)")
+        case .info:    MyLogger.info("AudioKit: \(message)")
+        case .warning: MyLogger.warn("AudioKit: \(message)")
+        case .error:   MyLogger.error("AudioKit: \(message)")
+        case .off:     break
+        }
+    }
+}
 
-// Seek（进度 0~1）
-player.seek(progress: 0.5)
-
-// 变速
-player.rate = 1.5
+// 在 App 启动时注入
+VILogger.level = .debug // 控制输出级别
+VILogger.customLogger = MyAppLogger()
 ```
 
 ### 缓存管理
@@ -176,24 +174,8 @@ case .complete(let fileURL):
     print("已完整缓存: \(fileURL.path)")
 }
 
-// 获取指定 URL 的缓存目录
-if let path = player.cachePath(for: url) {
-    print("缓存路径: \(path.path)")
-}
-
-// 获取完整缓存文件路径
-if let fileURL = player.completeCacheURL(for: url) {
-    print("完整缓存文件: \(fileURL.path)")
-}
-
-// 删除单个 URL 的缓存
-player.removeCache(for: url)
-
 // 清空所有缓存
 player.removeAllCache()
-
-// 获取缓存根目录
-print("缓存根目录: \(player.cacheDirectory.path)")
 ```
 
 ### 自定义配置
@@ -207,72 +189,38 @@ var dlConfig = VIDownloaderConfiguration(
     requestTimeoutInterval: 15          // 15s 超时
 )
 
-// 云存储 URL 去除签名参数（阿里云 OSS / AWS S3 等）
+// 去除云存储签名参数以合并相同文件的缓存键（阿里云 OSS / AWS S3 等）
 dlConfig.urlCanonicalizer = VIDownloaderConfiguration.stripQueryCanonicalizer
 
-// 自定义播放器配置
+// 自定义播放器起播配置
 let config = VIPlayerConfiguration(
     downloaderConfiguration: dlConfig,
     decodeBufferCount: 16,               // 解码缓冲区数量
     framesPerBuffer: 8192,               // 每个缓冲区帧数
-    secondsRequiredToStartPlaying: 1.0,  // 起播缓冲时长
-    secondsRequiredAfterSeek: 0.5,       // seek 后缓冲时长
-    secondsRequiredAfterBufferUnderrun: 3.0  // 欠载恢复缓冲时长
+    secondsRequiredToStartPlaying: 1.0,  // 初始起播需缓冲的时长
+    secondsRequiredAfterSeek: 0.5,       // seek 后需缓冲的时长
+    secondsRequiredAfterBufferUnderrun: 3.0  // 发生卡顿恢复时需缓冲的时长
 )
 
 let player = VIAudioPlayer(configuration: config)
 ```
 
-### 独立使用下载模块
+## 扩展解码器协议
+
+如果你需要支持专属的音频格式，可以实现对应的解码协议并插入播放器：
+
+- `VIAudioDecoding`: 用于读取本地完整文件（Pull 模式）。
+- `VIStreamDecoding`: 用于解析网络推送的数据流（Push 模式）。
 
 ```swift
-import VIAudioDownloader  // SPM
-// import VIAudioKit       // CocoaPods
-
-let downloader = VIChunkedDownloader()
-
-// 下载完整文件
-let task = downloader.download(url: url)
-
-// 下载指定范围
-let rangeTask = downloader.downloadRange(url: url, range: 0..<(512 * 1024))
-
-// 查询缓存
-let status = downloader.cacheStatus(for: url)
-
-// 清理
-downloader.removeCache(for: url)
-downloader.removeAllCache()
-```
-
-### 自定义解码器
-
-实现 `VIAudioDecoding` 协议即可扩展支持新格式：
-
-```swift
-final class MyOggDecoder: VIAudioDecoding {
-    static var supportedExtensions: Set<String> { ["ogg"] }
-
-    required init(source: VIAudioSource) throws {
-        // 初始化解码器
-    }
-
-    var outputFormat: AVAudioFormat { /* PCM 输出格式 */ }
-    var duration: TimeInterval { /* 总时长 */ }
-    var currentTime: TimeInterval { /* 当前位置 */ }
-
-    func decode(into buffer: AVAudioPCMBuffer) -> Int {
-        // 解码填充 buffer，返回帧数
-    }
-
-    func seek(to time: TimeInterval) throws {
-        // 跳转
-    }
-
-    func close() {
-        // 释放资源
-    }
+final class MyOggStreamDecoder: VIStreamDecoding {
+    static var supportedExtensions: Set<String> { ["ogg", "opus"] }
+    required init() {}
+    // 实现 open, feed, seek, flush, close 等方法...
 }
+
+// 注册
+player.streamDecoderTypes.append(MyOggStreamDecoder.self)
 ```
 
 ## 状态流转
@@ -289,7 +237,7 @@ idle → preparing → ready → playing ⇄ paused
 
 - **网络模式**：`load()` → `preparing` → `buffering` → `playing`（支持预触发：`preparing` 或 `buffering` 阶段调用 `play()` 即可在就绪后自动播放）
 - **本地模式**：`load()` → `preparing` → `ready` → `playing`（支持预触发：`preparing` 阶段调用 `play()` 即可在就绪后自动播放）
-- **缓冲恢复**：`playing` → `buffering`（欠载）→ `playing`（自动恢复）
+- **缓冲恢复**：`playing` → 遇到网络波动音频耗尽 → `buffering`（欠载）→ 网络恢复满足 `secondsRequiredAfterBufferUnderrun` → 自动回到 `playing`
 
 ## 系统要求
 

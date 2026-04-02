@@ -2,16 +2,16 @@
   "name": "VIAudioKit",
   "version": "0.1.0",
   "summary": "Cross-platform audio player with chunked downloading, custom decoding and AVAudioEngine rendering.",
-  "homepage": "https://github.com/example/VIAudioKit",
+  "homepage": "https://github.com/wanqingrongruo/VIAudioKit",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
   },
   "authors": {
-    "VIAudioKit": "dev@example.com"
+    "VIAudioKit": "wanqingrongruo"
   },
   "source": {
-    "git": "https://github.com/example/VIAudioKit.git",
+    "git": "https://github.com/wanqingrongruo/VIAudioKit.git",
     "tag": "0.1.0"
   },
   "platforms": {
@@ -50,8 +50,11 @@
 
         ]
       },
-      "source_files": "Sources/VIAudioFFmpeg/**/*.{swift,h,m,c}",
-      "preserve_paths": "Sources/VIAudioFFmpeg/include/module.modulemap",
+      "source_files": "Sources/VIAudioFFmpeg/**/*.{swift,m,c}",
+      "preserve_paths": [
+        "Sources/VIAudioFFmpeg/include/module.modulemap",
+        "Sources/VIAudioFFmpeg/include/**/*.h"
+      ],
       "pod_target_xcconfig": {
         "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "COCOAPODS",
         "SWIFT_INCLUDE_PATHS": "$(PODS_TARGET_SRCROOT)/Sources/VIAudioFFmpeg/include",

@@ -22,7 +22,7 @@ internal class FFmpegResampler {
     }
     
     func close() {
-        if let ctx = swrContext {
+        if swrContext != nil {
             swr_free(&swrContext)
             swrContext = nil
         }
@@ -32,8 +32,8 @@ internal class FFmpegResampler {
     /// Initializes or re-initializes the SwrContext based on the incoming frame parameters.
     func configure(with frame: UnsafeMutablePointer<AVFrame>) throws -> AVAudioFormat {
         let inRate = frame.pointee.sample_rate
-        let inChannels = frame.pointee.channels
-        let inChannelLayout = frame.pointee.channel_layout
+        let inChannels = frame.pointee.ch_layout.nb_channels
+        var inLayout = frame.pointee.ch_layout
         let inSampleFmt = AVSampleFormat(rawValue: frame.pointee.format)
         
         let targetRate = inRate > 0 ? inRate : 44100
@@ -60,21 +60,27 @@ internal class FFmpegResampler {
         outChannels = targetChannels
         outFormat = format
         
-        let targetChannelLayout = (targetChannels == 1) ? 4 : 3 // 4 is AV_CH_LAYOUT_MONO, 3 is AV_CH_LAYOUT_STEREO
+        var targetLayout = AVChannelLayout()
+        av_channel_layout_default(&targetLayout, targetChannels)
         
-        var ctx: OpaquePointer? = swr_alloc_set_opts(
-            nil,
-            Int64(targetChannelLayout),
+        if inLayout.nb_channels == 0 {
+            av_channel_layout_default(&inLayout, inChannels > 0 ? inChannels : targetChannels)
+        }
+        
+        var ctx: OpaquePointer? = nil
+        let ret = swr_alloc_set_opts2(
+            &ctx,
+            &targetLayout,
             AV_SAMPLE_FMT_FLTP,
             targetRate,
-            Int64(inChannelLayout == 0 ? ((inChannels == 1) ? 4 : 3) : inChannelLayout),
+            &inLayout,
             inSampleFmt,
             inRate,
             0,
             nil
         )
         
-        if ctx == nil {
+        if ret < 0 || ctx == nil {
             throw NSError(domain: "VIAudioFFmpeg", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to allocate SwrContext"])
         }
         

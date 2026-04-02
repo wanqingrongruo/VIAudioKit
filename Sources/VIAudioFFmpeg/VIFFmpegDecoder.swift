@@ -46,9 +46,7 @@ public final class VIFFmpegDecoder: VIAudioDecoding {
         
         // Register FFmpeg components
         avformat_network_init()
-        
-        let fileExt = source.url.pathExtension.lowercased()
-        
+                
         // 1. Allocate IO context buffer
         ioBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: ioBufferSize)
         
@@ -238,13 +236,13 @@ public final class VIFFmpegDecoder: VIAudioDecoding {
         lock.lock()
         defer { lock.unlock() }
         
-        if let pkt = packet {
+        if packet != nil {
             av_packet_free(&packet)
         }
-        if let frame = decodedFrame {
+        if decodedFrame != nil {
             av_frame_free(&decodedFrame)
         }
-        if let codecCtx = codecContext {
+        if codecContext != nil {
             avcodec_free_context(&codecContext)
         }
         if let fmtCtx = formatContext {

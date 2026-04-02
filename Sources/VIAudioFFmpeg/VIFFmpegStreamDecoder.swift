@@ -191,13 +191,13 @@ public final class VIFFmpegStreamDecoder: VIStreamDecoding {
         }
         decoderThread = nil
         
-        if let pkt = packet {
+        if packet != nil {
             av_packet_free(&packet)
         }
-        if let frame = decodedFrame {
+        if decodedFrame != nil {
             av_frame_free(&decodedFrame)
         }
-        if let codecCtx = codecContext {
+        if codecContext != nil {
             avcodec_free_context(&codecContext)
         }
         if let fmtCtx = formatContext {
