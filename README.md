@@ -71,7 +71,7 @@ pod 'ffmpeg-kit-ios-full', :podspec => 'https://raw.githubusercontent.com/luthvi
 
 # 或者，如果宿主 App 已经 手动导入 了 FFmpegKit 的 Framework/XCFramework 库
 # 使用免依赖的 FFmpeg-Manual subspec，避免重复链接导致的 Duplicate Symbols 报错
-# pod 'VIAudioKit', :git => 'https://github.com/wanqingrongruo/VIAudioKit.git', :tag => '0.1.0', :subspecs => ['Core', 'FFmpeg-Manual']
+pod 'VIAudioKit', :git => 'https://github.com/wanqingrongruo/VIAudioKit.git', :tag => '0.1.0', :subspecs => ['Core', 'FFmpeg-Manual']
 ```
 *注意：*
 1. *如果引入了包含 FFmpeg 的模块，需要在 Podfile 顶部指定静态链接：`use_frameworks! :linkage => :static`。*
