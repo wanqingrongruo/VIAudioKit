@@ -98,7 +98,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
     private var playbackBaseTime: TimeInterval = 0
 
     /// Whether the user requested play (even while in buffering state).
-    private var playWhenReady = false
+    public private(set) var playWhenReady = false
 
     /// Tracks why we're in buffering state (to pick the right threshold).
     private var bufferingReason: BufferingReason?

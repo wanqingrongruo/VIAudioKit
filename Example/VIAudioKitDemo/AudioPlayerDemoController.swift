@@ -160,8 +160,14 @@ final class AudioPlayerDemoController: UIViewController {
     private let playPauseButton: UIButton = {
         let b = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 36, weight: .medium)
-        b.setImage(UIImage(systemName: "play.circle.fill", withConfiguration: config), for: .normal)
-        b.tintColor = .systemBlue
+        b.setImage(UIImage(systemName: "play.fill", withConfiguration: config), for: .normal)
+        b.tintColor = .white
+        b.backgroundColor = .systemBlue
+        b.layer.cornerRadius = 22
+        b.layer.masksToBounds = true
+        // Ensure the button can be interacted with smoothly even when rapidly tapped
+        b.isExclusiveTouch = true
+        b.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         return b
     }()
     private let stopButton: UIButton = {
@@ -242,11 +248,9 @@ final class AudioPlayerDemoController: UIViewController {
         view.addSubview(artworkView)
         artworkView.addSubview(titleLabel)
         artworkView.addSubview(stateLabel)
-        artworkView.addSubview(bufferingIndicator)
         artworkView.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         stateLabel.translatesAutoresizingMaskIntoConstraints = false
-        bufferingIndicator.translatesAutoresizingMaskIntoConstraints = false
 
         view.addSubview(bufferProgressView)
         view.addSubview(progressSlider)
@@ -265,6 +269,11 @@ final class AudioPlayerDemoController: UIViewController {
         controlStack.alignment = .center
         view.addSubview(controlStack)
         controlStack.translatesAutoresizingMaskIntoConstraints = false
+
+        playPauseButton.addSubview(bufferingIndicator)
+        bufferingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        // Let touches pass through the indicator to the button
+        bufferingIndicator.isUserInteractionEnabled = false
 
         view.addSubview(rateSegmented)
         rateSegmented.translatesAutoresizingMaskIntoConstraints = false
@@ -301,8 +310,8 @@ final class AudioPlayerDemoController: UIViewController {
             stateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
             stateLabel.centerXAnchor.constraint(equalTo: artworkView.centerXAnchor),
 
-            bufferingIndicator.centerYAnchor.constraint(equalTo: stateLabel.centerYAnchor),
-            bufferingIndicator.leadingAnchor.constraint(equalTo: stateLabel.trailingAnchor, constant: 6),
+            bufferingIndicator.centerXAnchor.constraint(equalTo: playPauseButton.centerXAnchor),
+            bufferingIndicator.centerYAnchor.constraint(equalTo: playPauseButton.centerYAnchor),
 
             bufferProgressView.topAnchor.constraint(equalTo: artworkView.bottomAnchor, constant: 20),
             bufferProgressView.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 58),
@@ -321,6 +330,9 @@ final class AudioPlayerDemoController: UIViewController {
 
             controlStack.topAnchor.constraint(equalTo: currentTimeLabel.bottomAnchor, constant: 16),
             controlStack.centerXAnchor.constraint(equalTo: g.centerXAnchor),
+
+            playPauseButton.widthAnchor.constraint(equalToConstant: 44),
+            playPauseButton.heightAnchor.constraint(equalToConstant: 44),
 
             rateSegmented.topAnchor.constraint(equalTo: controlStack.bottomAnchor, constant: 16),
             rateSegmented.centerXAnchor.constraint(equalTo: g.centerXAnchor),
@@ -360,19 +372,25 @@ final class AudioPlayerDemoController: UIViewController {
         case .playing:
             player.pause()
         case .ready, .paused, .buffering, .preparing:
-            player.play()
+            if player.playWhenReady {
+                player.pause()
+            } else {
+                player.play()
+            }
         default:
             if currentIndex >= 0 {
                 loadAndPlay(index: currentIndex)
             }
         }
+        // Force an immediate UI update based on the current player state
+        updatePlayPauseIcon(state: player.state)
     }
 
     @objc private func stopTapped() {
         player.stop()
         progressSlider.value = 0
         currentTimeLabel.text = "00:00"
-        updatePlayPauseIcon(playing: false)
+        updatePlayPauseIcon(state: .idle)
     }
 
     @objc private func seekBackward() {
@@ -468,10 +486,28 @@ final class AudioPlayerDemoController: UIViewController {
         }
     }
 
-    private func updatePlayPauseIcon(playing: Bool) {
-        let name = playing ? "pause.circle.fill" : "play.circle.fill"
+    private func updatePlayPauseIcon(state: VIPlayerState) {
+        let isPlaying = state == .playing
+        var name: String? = isPlaying ? "pause.fill" : "play.fill"
+        let isBufferForPlay = (state == .buffering || state == .preparing) && player.playWhenReady
+        if isBufferForPlay {
+            name = nil
+        }
         let config = UIImage.SymbolConfiguration(pointSize: 36, weight: .medium)
-        playPauseButton.setImage(UIImage(systemName: name, withConfiguration: config), for: .normal)
+        var image: UIImage?
+        if let name = name {
+            image = UIImage(systemName: name, withConfiguration: config)
+        }
+        
+        if isBufferForPlay {
+            // Keep the icon visible but dim it slightly, and show the spinner over it
+            playPauseButton.setImage(image, for: .normal)
+            bufferingIndicator.startAnimating()
+        } else {
+            playPauseButton.setImage(image, for: .normal)
+            playPauseButton.alpha = 1.0
+            bufferingIndicator.stopAnimating()
+        }
     }
 
     private func formatTime(_ seconds: TimeInterval) -> String {
@@ -548,41 +584,27 @@ final class AudioPlayerDemoController: UIViewController {
 extension AudioPlayerDemoController: VIAudioPlayerDelegate {
 
     func player(_ player: VIAudioPlayer, didChangeState state: VIPlayerState) {
+        updatePlayPauseIcon(state: state)
         switch state {
         case .idle:
             stateLabel.text = "Idle"
-            updatePlayPauseIcon(playing: false)
-            bufferingIndicator.stopAnimating()
         case .preparing:
             stateLabel.text = "Preparing..."
-            bufferingIndicator.startAnimating()
             syncProgressLabelsFromPlayer(player)
         case .ready:
             stateLabel.text = "Ready"
             syncProgressLabelsFromPlayer(player)
-            updatePlayPauseIcon(playing: false)
-            bufferingIndicator.stopAnimating()
         case .playing:
             stateLabel.text = "Playing"
-            updatePlayPauseIcon(playing: true)
-            bufferingIndicator.stopAnimating()
         case .paused:
             stateLabel.text = "Paused"
-            updatePlayPauseIcon(playing: false)
-            bufferingIndicator.stopAnimating()
         case .buffering:
             stateLabel.text = "Buffering"
-            updatePlayPauseIcon(playing: false)
-            bufferingIndicator.startAnimating()
             syncProgressLabelsFromPlayer(player)
         case .finished:
             stateLabel.text = "Finished"
-            updatePlayPauseIcon(playing: false)
-            bufferingIndicator.stopAnimating()
         case .failed(let error):
             stateLabel.text = "Error"
-            updatePlayPauseIcon(playing: false)
-            bufferingIndicator.stopAnimating()
             showErrorAlert(error)
         }
         // Keep state transition lightweight on main thread; cache info refreshes asynchronously.
