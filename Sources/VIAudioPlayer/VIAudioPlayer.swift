@@ -119,7 +119,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
     private let stateQueue = DispatchQueue(label: "com.viaudiokit.player.state")
 
     /// Registry of pull-mode decoder types. Add custom decoders here.
-    public var decoderTypes: [VIAudioDecoding.Type] = [VINativeDecoder.self]
+    public var decoderTypes: [VIAudioDecoding.Type] = [VINativeDecoder.self, VIMixingDecoder.self]
 
     /// Registry of push-mode (stream) decoder types.
     /// The player iterates through these and picks the first one supporting the file extension.

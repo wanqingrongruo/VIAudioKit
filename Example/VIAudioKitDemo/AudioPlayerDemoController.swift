@@ -75,6 +75,28 @@ final class AudioPlayerDemoController: UIViewController {
             isLocal: false
         ))
 
+        // --- Mix test (VIMixingDecoder) ---
+        if items.count >= 2 {
+            // Find two local files to mix
+            let localItems = items.filter { $0.isLocal }
+            if localItems.count >= 2 {
+                let url1 = localItems[0].url.absoluteString
+                let url2 = localItems[1].url.absoluteString
+                if let jsonData = try? JSONSerialization.data(withJSONObject: [url1, url2], options: []),
+                   let stringData = String(data: jsonData, encoding: .utf8) {
+                    
+                    let mixFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("mixed_test.vimix")
+                    try? stringData.write(to: mixFileURL, atomically: true, encoding: .utf8)
+                    
+                    items.insert(AudioItem(
+                        title: "[MIX] \(localItems[0].url.lastPathComponent) + \(localItems[1].url.lastPathComponent)",
+                        url: mixFileURL,
+                        isLocal: true
+                    ), at: 0)
+                }
+            }
+        }
+
         return items
     }()
 

@@ -122,6 +122,39 @@ player.load(url: URL(string: "https://example.com/song.opus")!)
 player.play()
 ```
 
+### 播放控制与混音播放
+
+```swift
+player.play()
+player.pause()
+player.stop()
+
+// Seek（秒）
+player.seek(to: 30.0)
+
+// Seek（进度 0~1）
+player.seek(progress: 0.5)
+
+// 变速
+player.rate = 1.5
+
+// 【混音播放 (Audio Mixing)】
+// VIAudioKit 原生提供了 `VIMixingDecoder`，支持将多个本地音频无缝混合为单一流式轨道播放。
+// 你只需要将包含多个本地音频绝对路径的数组序列化为 JSON，并保存为扩展名 `.vimix` 的文件：
+let url1 = Bundle.main.url(forResource: "vocal", withExtension: "mp3")!
+let url2 = Bundle.main.url(forResource: "beat", withExtension: "m4a")!
+
+let mixFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("track.vimix")
+let jsonList = [url1.absoluteString, url2.absoluteString]
+let jsonData = try! JSONSerialization.data(withJSONObject: jsonList, options: [])
+try! jsonData.write(to: mixFileURL)
+
+// 像播放普通音频一样加载该 `.vimix` 文件即可！
+// 底层使用 Accelerate 框架实现高性能流式混音，且同样支持变速（rate）与 Seek：
+player.load(url: mixFileURL)
+player.play()
+```
+
 ### Delegate 回调
 
 ```swift
