@@ -154,6 +154,17 @@ public final class VIAudioPlayer: @unchecked Sendable {
                     self.state = .paused
                     self.stopTimeUpdates()
                 }
+            } else {
+                // 中断结束：renderer 已根据 shouldResume 决定是否恢复 playerNode
+                // 通过 isNodePlaying 确认 renderer 是否真的恢复了，再同步 Player 状态
+                if self.playWhenReady && self.renderer.isNodePlaying {
+                    self.playWhenReady = false
+                    self.state = .playing
+                    self.startTimeUpdates()
+                } else {
+                    // shouldResume 为 false 或 renderer 恢复失败，清除标记，等待用户手动恢复
+                    self.playWhenReady = false
+                }
             }
         }
     }

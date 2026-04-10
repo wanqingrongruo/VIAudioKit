@@ -26,6 +26,10 @@ public struct VIDownloaderConfiguration: Sendable {
     /// Timeout interval for individual HTTP range requests.
     public var requestTimeoutInterval: TimeInterval
 
+    /// Maximum number of retries on network errors.
+    /// 网络错误时的最大重试次数。
+    public var maxRetryCount: Int
+
     // MARK: - Initializer
 
     public init(
@@ -33,6 +37,7 @@ public struct VIDownloaderConfiguration: Sendable {
         maxCacheSize: Int64 = 500 * 1024 * 1024,
         defaultChunkSize: Int = 512 * 1024,
         requestTimeoutInterval: TimeInterval = 30,
+        maxRetryCount: Int = 20,
         urlCanonicalizer: (@Sendable (URL) -> URL)? = nil,
         cacheKeyGenerator: (@Sendable (URL) -> String)? = nil
     ) {
@@ -40,6 +45,7 @@ public struct VIDownloaderConfiguration: Sendable {
         self.maxCacheSize = maxCacheSize
         self.defaultChunkSize = defaultChunkSize
         self.requestTimeoutInterval = requestTimeoutInterval
+        self.maxRetryCount = max(0, maxRetryCount)
         self.urlCanonicalizer = urlCanonicalizer ?? Self.identityCanonicalizer
         self.cacheKeyGenerator = cacheKeyGenerator
     }

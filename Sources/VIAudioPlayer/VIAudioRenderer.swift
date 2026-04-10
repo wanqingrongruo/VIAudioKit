@@ -45,6 +45,9 @@ public final class VIAudioRenderer: @unchecked Sendable {
     /// Number of buffers currently scheduled in the player node.
     public private(set) var scheduledBufferCount: Int = 0
 
+    /// playerNode 当前是否在播放（用于中断恢复后的状态同步）
+    public var isNodePlaying: Bool { playerNode.isPlaying }
+
     // MARK: - Rate
 
     public var rate: Float {
@@ -172,6 +175,13 @@ public final class VIAudioRenderer: @unchecked Sendable {
         os_unfair_lock_unlock(&_lock)
         scheduledFormat = nil
         _isPrepared = false
+        #if os(iOS) || os(tvOS)
+        if let observer = interruptionObserver {
+            NotificationCenter.default.removeObserver(observer)
+            interruptionObserver = nil
+        }
+        isAudioSessionConfigured = false
+        #endif
         engineLock.unlock()
     }
 

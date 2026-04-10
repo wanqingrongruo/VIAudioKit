@@ -75,7 +75,7 @@ public final class VIPushAudioSource: @unchecked Sendable {
     // MARK: - Retry
 
     private var retryCount = 0
-    private let maxRetries = 20
+    private let maxRetries: Int
     private var retryWorkItem: DispatchWorkItem?
 
     private let lock = NSLock()
@@ -86,6 +86,7 @@ public final class VIPushAudioSource: @unchecked Sendable {
         self.url = url
         self.cacheManager = cacheManager
         self.configuration = configuration
+        self.maxRetries = configuration.maxRetryCount
 
         let unit = cacheManager.unit(for: url)
         self.contentLength = unit.totalLength

@@ -17,8 +17,8 @@ public enum VIPlayerState: Sendable, Equatable {
              (.playing, .playing), (.paused, .paused), (.buffering, .buffering),
              (.finished, .finished):
             return true
-        case (.failed, .failed):
-            return true
+        case (.failed(let lhsErr), .failed(let rhsErr)):
+            return lhsErr == rhsErr
         default:
             return false
         }
@@ -34,6 +34,29 @@ public enum VIPlayerError: Error, Sendable {
     case seekFailed(Error)
     case networkError(Error)
     case unknown(Error)
+}
+
+extension VIPlayerError: Equatable {
+    public static func == (lhs: VIPlayerError, rhs: VIPlayerError) -> Bool {
+        switch (lhs, rhs) {
+        case (.sourceCreationFailed, .sourceCreationFailed):
+            return true
+        case (.decoderCreationFailed(let l), .decoderCreationFailed(let r)):
+            return (l as NSError) == (r as NSError)
+        case (.decodingFailed(let l), .decodingFailed(let r)):
+            return (l as NSError) == (r as NSError)
+        case (.renderingFailed(let l), .renderingFailed(let r)):
+            return (l as NSError) == (r as NSError)
+        case (.seekFailed(let l), .seekFailed(let r)):
+            return (l as NSError) == (r as NSError)
+        case (.networkError(let l), .networkError(let r)):
+            return (l as NSError) == (r as NSError)
+        case (.unknown(let l), .unknown(let r)):
+            return (l as NSError) == (r as NSError)
+        default:
+            return false
+        }
+    }
 }
 
 /// Buffer state reported to delegates.
