@@ -206,14 +206,12 @@ public final class VICacheUnit: Codable, @unchecked Sendable {
             }
 
             while true {
+                var chunk = Data()
                 autoreleasepool {
-                    let chunk = readHandle.readData(ofLength: 1024 * 1024)
-                    if chunk.isEmpty { return }
-                    writeHandle.write(chunk)
+                    chunk = readHandle.readData(ofLength: 1024 * 1024)
                 }
-                let pos = try? readHandle.offset()
-                if pos == nil { break }
-                if (try? readHandle.offset()) == UInt64(seg.length) { break }
+                if chunk.isEmpty { break }
+                writeHandle.write(chunk)
             }
             cursor = seg.offset + seg.length
         }
@@ -224,9 +222,9 @@ public final class VICacheUnit: Codable, @unchecked Sendable {
             return nil
         }
 
-        // Replace segments with the single merged segment
+        // 用快照 segs 删除旧文件，避免误删释放锁期间新插入的 segment
         lock.lock()
-        for seg in segments {
+        for seg in segs {
             let path = directory.appendingPathComponent(seg.relativePath)
             try? fm.removeItem(at: path)
         }

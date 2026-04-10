@@ -13,6 +13,7 @@ internal class FFmpegResampler {
     
     private var outSampleRate: Int32 = 0
     private var outChannels: Int32 = 0
+    private var lastInSampleFmt: AVSampleFormat = AV_SAMPLE_FMT_NONE
     private var outFormat: AVAudioFormat?
     
     init() {}
@@ -50,7 +51,7 @@ internal class FFmpegResampler {
         }
         
         // If context exists but parameters changed, we close it and recreate
-        if isConfigured, outSampleRate == targetRate, outChannels == targetChannels {
+        if isConfigured, outSampleRate == targetRate, outChannels == targetChannels, lastInSampleFmt == inSampleFmt {
             return format
         }
         
@@ -58,6 +59,7 @@ internal class FFmpegResampler {
         
         outSampleRate = targetRate
         outChannels = targetChannels
+        lastInSampleFmt = inSampleFmt
         outFormat = format
         
         var targetLayout = AVChannelLayout()

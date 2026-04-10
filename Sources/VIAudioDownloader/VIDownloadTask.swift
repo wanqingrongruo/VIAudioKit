@@ -15,15 +15,53 @@ public final class VIDownloadTask: @unchecked Sendable {
     public let url: URL
     public let requestedRange: Range<Int64>?
 
-    public private(set) var state: State = .idle {
-        didSet { onStateChange?(state) }
+    private let lock = NSLock()
+
+    private var _state: State = .idle
+    public private(set) var state: State {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _state
+        }
+        set {
+            lock.lock()
+            _state = newValue
+            let callback = onStateChange
+            lock.unlock()
+            callback?(newValue)
+        }
     }
 
+    private var _downloadedBytes: Int64 = 0
     /// Bytes downloaded so far for this task.
-    public private(set) var downloadedBytes: Int64 = 0
+    public private(set) var downloadedBytes: Int64 {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _downloadedBytes
+        }
+        set {
+            lock.lock()
+            _downloadedBytes = newValue
+            lock.unlock()
+        }
+    }
 
+    private var _totalBytes: Int64 = 0
     /// Total expected bytes (from Content-Length or requested range size).
-    public private(set) var totalBytes: Int64 = 0
+    public private(set) var totalBytes: Int64 {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _totalBytes
+        }
+        set {
+            lock.lock()
+            _totalBytes = newValue
+            lock.unlock()
+        }
+    }
 
     /// Progress callback (0.0 – 1.0).
     public var onProgress: ((_ progress: Double) -> Void)?
@@ -70,8 +108,12 @@ public final class VIDownloadTask: @unchecked Sendable {
     }
 
     internal func appendBytes(_ count: Int64, writtenRange: Range<Int64>) {
-        downloadedBytes += count
-        let progress = totalBytes > 0 ? Double(downloadedBytes) / Double(totalBytes) : 0
+        lock.lock()
+        _downloadedBytes += count
+        let total = _totalBytes
+        let downloaded = _downloadedBytes
+        lock.unlock()
+        let progress = total > 0 ? Double(downloaded) / Double(total) : 0
         onProgress?(min(progress, 1.0))
         onDataAvailable?(writtenRange)
     }

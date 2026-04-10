@@ -24,6 +24,8 @@ public final class VINativeDecoder: VIAudioDecoding {
     private let sampleRate: Double
     private let lock = NSLock()
 
+    private var audioFileID: AudioFileID?
+
     // MARK: - Init
 
     public required init(source: VIAudioSource) throws {
@@ -36,9 +38,46 @@ public final class VINativeDecoder: VIAudioDecoding {
         VILogger.debug("[VINativeDecoder] Opening: \(source.url.path)")
         var extFile: ExtAudioFileRef?
         let openStatus = ExtAudioFileOpenURL(source.url as CFURL, &extFile)
-        guard openStatus == noErr, extFile != nil else {
-            VILogger.debug("[VINativeDecoder] ExtAudioFileOpenURL failed: \(openStatus)")
-            throw VIDecoderError.fileOpenFailed(openStatus)
+
+        if openStatus != noErr || extFile == nil {
+            // ExtAudioFileOpenURL 依赖文件扩展名识别格式。
+            // 缓存文件使用 hash 命名无扩展名，需通过 AudioFileOpenURL + typeHint 打开。
+            // 先读文件头用于诊断
+            if let headerData = try? Data(contentsOf: source.url, options: .mappedIfSafe).prefix(16) {
+                let hex = headerData.map { String(format: "%02x", $0) }.joined(separator: " ")
+                let ascii = String(data: headerData, encoding: .ascii) ?? ""
+                VILogger.debug("[VINativeDecoder] File header (hex): \(hex)")
+                VILogger.debug("[VINativeDecoder] File header (ascii): \(ascii.prefix(16))")
+            }
+            VILogger.debug("[VINativeDecoder] ExtAudioFileOpenURL failed (\(openStatus)), trying AudioFileOpenURL with type hint: \(source.fileExtension)")
+            let typeHint = Self.audioFileTypeHint(for: source.fileExtension)
+
+            // 先用明确的 typeHint 尝试，失败后用 0 让系统自动探测格式
+            let hints: [AudioFileTypeID] = typeHint != 0 ? [typeHint, 0] : [0]
+            var afID: AudioFileID?
+            var afStatus: OSStatus = -1
+
+            for hint in hints {
+                afStatus = AudioFileOpenURL(source.url as CFURL, .readPermission, hint, &afID)
+                if afStatus == noErr && afID != nil {
+                    VILogger.debug("[VINativeDecoder] AudioFileOpenURL succeeded with hint=\(hint)")
+                    break
+                }
+                VILogger.debug("[VINativeDecoder] AudioFileOpenURL failed with hint=\(hint): \(afStatus)")
+                afID = nil
+            }
+
+            guard afStatus == noErr, let afID else {
+                VILogger.debug("[VINativeDecoder] All AudioFileOpenURL attempts failed")
+                throw VIDecoderError.fileOpenFailed(afStatus)
+            }
+            self.audioFileID = afID
+            let wrapStatus = ExtAudioFileWrapAudioFileID(afID, false, &extFile)
+            guard wrapStatus == noErr, extFile != nil else {
+                AudioFileClose(afID)
+                VILogger.debug("[VINativeDecoder] ExtAudioFileWrapAudioFileID failed: \(wrapStatus)")
+                throw VIDecoderError.fileOpenFailed(wrapStatus)
+            }
         }
         self.extAudioFile = extFile
 
@@ -154,6 +193,11 @@ public final class VINativeDecoder: VIAudioDecoding {
             ExtAudioFileDispose(extFile)
             self.extAudioFile = nil
         }
+        // audioFileID 必须在 ExtAudioFileDispose 之后关闭
+        if let afID = audioFileID {
+            AudioFileClose(afID)
+            self.audioFileID = nil
+        }
         lock.unlock()
     }
 
@@ -168,5 +212,21 @@ public final class VINativeDecoder: VIAudioDecoding {
         var tellPos: Int64 = 0
         ExtAudioFileTell(audioFile, &tellPos)
         return tellPos
+    }
+
+    /// 将文件扩展名映射为 AudioToolbox 的 AudioFileTypeID，
+    /// 供 AudioFileOpenURL 在文件缺少扩展名时使用。
+    private static func audioFileTypeHint(for ext: String) -> AudioFileTypeID {
+        switch ext.lowercased() {
+        case "wav":  return kAudioFileWAVEType
+        case "mp3":  return kAudioFileMP3Type
+        case "aac":  return kAudioFileAAC_ADTSType
+        case "m4a":  return kAudioFileM4AType
+        case "mp4":  return kAudioFileMPEG4Type
+        case "flac": return kAudioFileFLACType
+        case "aiff", "aif": return kAudioFileAIFFType
+        case "caf":  return kAudioFileCAFType
+        default:     return 0
+        }
     }
 }

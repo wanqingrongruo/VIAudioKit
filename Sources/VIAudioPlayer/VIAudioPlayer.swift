@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import os
 #if !COCOAPODS
 import VIAudioDownloader
 import VIAudioDecoder
@@ -46,19 +47,59 @@ public final class VIAudioPlayer: @unchecked Sendable {
     public weak var delegate: VIAudioPlayerDelegate?
     public let configuration: VIPlayerConfiguration
 
-    public private(set) var state: VIPlayerState = .idle {
-        didSet {
-            guard state != oldValue else { return }
-            let newState = state
+    /// 保护 _state / _currentTime / _duration / _shouldStopDecoding 的读写。
+    /// 使用 os_unfair_lock 是因为这些属性在音频热路径（renderer 回调）中被读取，
+    /// 需要避免 NSLock 可能引起的优先级反转。
+    private var _playerLock = os_unfair_lock()
+
+    private var _state: VIPlayerState = .idle
+    public private(set) var state: VIPlayerState {
+        get {
+            os_unfair_lock_lock(&_playerLock)
+            defer { os_unfair_lock_unlock(&_playerLock) }
+            return _state
+        }
+        set {
+            os_unfair_lock_lock(&_playerLock)
+            let oldValue = _state
+            _state = newValue
+            os_unfair_lock_unlock(&_playerLock)
+            guard newValue != oldValue else { return }
+            let captured = newValue
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                self.delegate?.player(self, didChangeState: newState)
+                self.delegate?.player(self, didChangeState: captured)
             }
         }
     }
 
-    public private(set) var currentTime: TimeInterval = 0
-    public private(set) var duration: TimeInterval = 0
+    private var _currentTime: TimeInterval = 0
+    public private(set) var currentTime: TimeInterval {
+        get {
+            os_unfair_lock_lock(&_playerLock)
+            defer { os_unfair_lock_unlock(&_playerLock) }
+            return _currentTime
+        }
+        set {
+            os_unfair_lock_lock(&_playerLock)
+            _currentTime = newValue
+            os_unfair_lock_unlock(&_playerLock)
+        }
+    }
+
+    private var _duration: TimeInterval = 0
+    public private(set) var duration: TimeInterval {
+        get {
+            os_unfair_lock_lock(&_playerLock)
+            defer { os_unfair_lock_unlock(&_playerLock) }
+            return _duration
+        }
+        set {
+            os_unfair_lock_lock(&_playerLock)
+            _duration = newValue
+            os_unfair_lock_unlock(&_playerLock)
+        }
+    }
 
     public var isPlaying: Bool { state == .playing }
 
@@ -90,7 +131,19 @@ public final class VIAudioPlayer: @unchecked Sendable {
     private var currentURL: URL?
     private var desiredRate: Float = 1.0
     private var isSeeking = false
-    private var shouldStopDecoding = false
+    private var _shouldStopDecoding = false
+    private var shouldStopDecoding: Bool {
+        get {
+            os_unfair_lock_lock(&_playerLock)
+            defer { os_unfair_lock_unlock(&_playerLock) }
+            return _shouldStopDecoding
+        }
+        set {
+            os_unfair_lock_lock(&_playerLock)
+            _shouldStopDecoding = newValue
+            os_unfair_lock_unlock(&_playerLock)
+        }
+    }
     private var seekGeneration: Int = 0
     private var loadGeneration: Int = 0
 
@@ -207,10 +260,12 @@ public final class VIAudioPlayer: @unchecked Sendable {
             loadLocalFile(url: url, extensionHint: nil, thisLoad: thisLoad)
         } else {
             if let cachedURL = downloader.completeCacheURL(for: url) {
-                VILogger.debug("[VIAudioPlayer] load: fully cached, using local file path")
+                // 诊断日志：验证缓存文件
+                let fileSize = (try? FileManager.default.attributesOfItem(atPath: cachedURL.path)[.size] as? Int64) ?? -1
+                VILogger.debug("[VIAudioPlayer] load: fully cached, file=\(cachedURL.lastPathComponent) diskSize=\(fileSize)")
                 isNetworkMode = false
                 let originalExt = url.pathExtension.lowercased()
-                loadLocalFile(url: cachedURL, extensionHint: originalExt, thisLoad: thisLoad)
+                loadLocalFile(url: cachedURL, extensionHint: originalExt, thisLoad: thisLoad, fallbackURL: url)
             } else {
                 isNetworkMode = true
                 loadNetworkFile(url: url, thisLoad: thisLoad)
@@ -222,7 +277,8 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
     /// - Parameter extensionHint: Override file extension (used when loading from cache
     ///   where the on-disk filename is a hash, not the original name).
-    private func loadLocalFile(url: URL, extensionHint: String?, thisLoad: Int) {
+    /// - Parameter fallbackURL: 缓存文件本地加载失败时，回退到 push 模式使用的原始网络 URL。
+    private func loadLocalFile(url: URL, extensionHint: String?, thisLoad: Int, fallbackURL: URL? = nil) {
         decodeQueue.async { [weak self] in
             guard let self else { return }
 
@@ -233,7 +289,7 @@ public final class VIAudioPlayer: @unchecked Sendable {
             }
 
             do {
-                let source = try VILocalFileSource(fileURL: url)
+                let source = try VILocalFileSource(fileURL: url, extensionOverride: extensionHint)
                 self.source = source
 
                 let ext = (extensionHint?.isEmpty == false) ? extensionHint! : source.fileExtension
@@ -276,13 +332,28 @@ public final class VIAudioPlayer: @unchecked Sendable {
                     }
                 }
             } catch {
+                // 缓存文件本地解码失败（可能文件尾部有脏数据，Apple 的解析器严格拒绝），
+                // 回退到 push 模式，流式解析器（AudioFileStream）更宽容。
+                if let networkURL = fallbackURL {
+                    VILogger.debug("[VIAudioPlayer] load: local decode failed (\(error)), falling back to push mode")
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        let stillCurrent = self.stateQueue.sync { thisLoad == self.loadGeneration }
+                        guard stillCurrent else { return }
+                        self.isNetworkMode = true
+                        self.loadNetworkFile(url: networkURL, thisLoad: thisLoad)
+                    }
+                    return
+                }
+
                 let stillCurrent: Bool = self.stateQueue.sync { thisLoad == self.loadGeneration }
                 guard stillCurrent else { return }
 
                 VILogger.debug("[VIAudioPlayer] load failed: \(error)")
                 let playerError = self.wrapError(error)
                 self.state = .failed(playerError)
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
                     self.delegate?.player(self, didReceiveError: playerError)
                 }
             }
@@ -472,7 +543,8 @@ public final class VIAudioPlayer: @unchecked Sendable {
             guard !stale else { return }
             VILogger.debug("[VIAudioPlayer] push source fatal error: \(error)")
             let playerError = VIPlayerError.networkError(error)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
                 self.state = .failed(playerError)
                 self.delegate?.player(self, didReceiveError: playerError)
             }
@@ -596,7 +668,13 @@ public final class VIAudioPlayer: @unchecked Sendable {
 
     /// Seek to a specific time in seconds.
     public func seek(to time: TimeInterval, completion: ((Bool) -> Void)? = nil) {
-        let targetTime = max(0, min(time, duration))
+        // 网络流 duration 尚未确定时，无法 clamp 也无法计算字节偏移，直接失败
+        guard duration > 0 || state == .idle else {
+            VILogger.debug("[VIAudioPlayer] seek: duration unknown, ignoring")
+            completion?(false)
+            return
+        }
+        let targetTime = duration > 0 ? max(0, min(time, duration)) : max(0, time)
 
         if isNetworkMode {
             seekNetwork(to: targetTime, completion: completion)
@@ -955,8 +1033,12 @@ public final class VIAudioPlayer: @unchecked Sendable {
         guard isNetworkMode, streamEndReached else { return }
         guard bufferQueue.isEmpty, renderer.scheduledBufferCount == 0 else { return }
 
+        let gen: Int = stateQueue.sync { loadGeneration }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
             guard let self else { return }
+            // 校验 loadGeneration 防止在延迟期间切换了曲目
+            let stale: Bool = self.stateQueue.sync { gen != self.loadGeneration }
+            guard !stale else { return }
             if self.streamEndReached, self.bufferQueue.isEmpty,
                self.renderer.scheduledBufferCount == 0,
                self.state == .playing || self.state == .buffering {

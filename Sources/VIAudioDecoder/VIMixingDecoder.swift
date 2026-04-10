@@ -63,6 +63,11 @@ public final class VIMixingDecoder: VIAudioDecoding {
             tempBuffers = decoders.compactMap { _ in
                 AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: buffer.frameCapacity)
             }
+            // 如果某些 buffer 创建失败导致数量不匹配，无法安全继续
+            guard tempBuffers.count == decoders.count else {
+                VILogger.warning("[VIMixingDecoder] tempBuffers count (\(tempBuffers.count)) != decoders count (\(decoders.count)), aborting decode")
+                return false
+            }
         }
 
         var maxFrames: AVAudioFrameCount = 0

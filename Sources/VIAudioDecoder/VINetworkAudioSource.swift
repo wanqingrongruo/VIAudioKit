@@ -8,6 +8,10 @@ import VIAudioDownloader
 ///
 /// For the decoder, this looks like a regular random-access file. Reads may
 /// block until the requested bytes have been downloaded.
+///
+/// - Note: 当前播放器使用 push 模式（`VIPushAudioSource`）处理网络流，
+///   此类保留作为 pull 模式的备选方案，暂不在主播放路径中使用。
+@available(*, deprecated, message: "使用 VIPushAudioSource 替代。此类保留作为 pull 模式网络源的备选实现。")
 public final class VINetworkAudioSource: VIAudioSource {
 
     public let url: URL

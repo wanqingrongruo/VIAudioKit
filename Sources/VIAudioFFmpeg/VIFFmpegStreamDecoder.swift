@@ -102,36 +102,45 @@ public final class VIFFmpegStreamDecoder: VIStreamDecodingWithExtension {
     }
     
     public func feed(_ data: Data) {
-        ringCondition.lock()
-        
-        // Wait if buffer is full
-        while ((ringTail + data.count) % ringCapacity) == ringHead && !isRingClosed {
-            ringCondition.wait()
-        }
-        
-        if isRingClosed {
-            ringCondition.unlock()
-            return
-        }
-        
-        totalBytesReceived += Int64(data.count)
-        
-        data.withUnsafeBytes { ptr in
-            guard let bytes = ptr.bindMemory(to: UInt8.self).baseAddress else { return }
-            let firstPart = min(data.count, ringCapacity - ringTail)
-            
-            ringBuffer.withUnsafeMutableBytes { rbPtr in
-                guard let rbBase = rbPtr.bindMemory(to: UInt8.self).baseAddress else { return }
-                memcpy(rbBase + ringTail, bytes, firstPart)
-                if data.count > firstPart {
-                    memcpy(rbBase, bytes + firstPart, data.count - firstPart)
+        var offset = 0
+        while offset < data.count {
+            ringCondition.lock()
+
+            // 计算环形缓冲区可用空间（保留 1 字节区分满/空）
+            var available = (ringHead - ringTail - 1 + ringCapacity) % ringCapacity
+            while available == 0 && !isRingClosed {
+                ringCondition.wait()
+                available = (ringHead - ringTail - 1 + ringCapacity) % ringCapacity
+            }
+
+            if isRingClosed {
+                ringCondition.unlock()
+                return
+            }
+
+            let chunkSize = min(data.count - offset, available)
+
+            data.withUnsafeBytes { ptr in
+                guard let bytes = ptr.bindMemory(to: UInt8.self).baseAddress else { return }
+                let src = bytes + offset
+                let firstPart = min(chunkSize, ringCapacity - ringTail)
+
+                ringBuffer.withUnsafeMutableBytes { rbPtr in
+                    guard let rbBase = rbPtr.bindMemory(to: UInt8.self).baseAddress else { return }
+                    memcpy(rbBase + ringTail, src, firstPart)
+                    if chunkSize > firstPart {
+                        memcpy(rbBase, src + firstPart, chunkSize - firstPart)
+                    }
                 }
             }
+
+            ringTail = (ringTail + chunkSize) % ringCapacity
+            offset += chunkSize
+            totalBytesReceived += Int64(chunkSize)
+
+            ringCondition.signal()
+            ringCondition.unlock()
         }
-        
-        ringTail = (ringTail + data.count) % ringCapacity
-        ringCondition.signal()
-        ringCondition.unlock()
     }
     
     public func flush() {

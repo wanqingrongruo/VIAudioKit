@@ -30,15 +30,20 @@ public final class VICacheManager: @unchecked Sendable {
     public func unit(for url: URL) -> VICacheUnit {
         let key = configuration.cacheKey(for: url)
         lock.lock()
-        defer { lock.unlock() }
         if let existing = units[key] {
             existing.lastAccessTime = Date()
+            lock.unlock()
             return existing
         }
         let unit = VICacheUnit(key: key, originalURL: url)
         units[key] = unit
+        lock.unlock()
         ensureDirectoryExists(directoryForUnit(key))
         scheduleSave()
+        // 创建新 unit 后异步检查缓存大小，必要时淘汰旧数据
+        ioQueue.async { [weak self] in
+            self?.evictIfNeeded()
+        }
         return unit
     }
 

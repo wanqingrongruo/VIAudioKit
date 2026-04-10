@@ -56,6 +56,7 @@ final class VIRangeRequest: NSObject, @unchecked Sendable {
         dataTask?.cancel()
         dataTask = nil
         closeHandles()
+        invalidateSession()
     }
 
     // MARK: - Helpers
@@ -66,6 +67,11 @@ final class VIRangeRequest: NSObject, @unchecked Sendable {
         try? writeHandle?.close()
         writeHandle = nil
         lock.unlock()
+    }
+
+    private func invalidateSession() {
+        ownedSession?.invalidateAndCancel()
+        ownedSession = nil
     }
 }
 
@@ -149,14 +155,17 @@ extension VIRangeRequest: URLSessionDataDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         closeHandles()
         if let error = error {
-            if (error as NSError).code == NSURLErrorCancelled { return }
+            // 取消时也需要清理 session，不能跳过
+            if (error as NSError).code == NSURLErrorCancelled {
+                invalidateSession()
+                return
+            }
             onError?(error)
         } else {
             cacheManager.scheduleSave()
             onComplete?()
         }
-        self.ownedSession?.invalidateAndCancel()
-        self.ownedSession = nil
+        invalidateSession()
     }
 }
 

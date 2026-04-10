@@ -10,12 +10,19 @@ public final class VILocalFileSource: VIAudioSource {
     private let lock = NSLock()
     private let fileSize: Int64
 
-    public init(fileURL: URL) throws {
+    /// - Parameters:
+    ///   - fileURL: 本地文件路径。
+    ///   - extensionOverride: 覆盖扩展名（用于缓存文件无扩展名的场景），为 nil 或空时使用文件自身扩展名。
+    public init(fileURL: URL, extensionOverride: String? = nil) throws {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             throw VIAudioSourceError.readFailed
         }
         self.url = fileURL
-        self.fileExtension = fileURL.pathExtension.lowercased()
+        if let ext = extensionOverride, !ext.isEmpty {
+            self.fileExtension = ext.lowercased()
+        } else {
+            self.fileExtension = fileURL.pathExtension.lowercased()
+        }
         let attrs = try FileManager.default.attributesOfItem(atPath: fileURL.path)
         self.fileSize = (attrs[.size] as? Int64) ?? 0
         self.fileHandle = try FileHandle(forReadingFrom: fileURL)

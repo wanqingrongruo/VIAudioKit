@@ -63,16 +63,25 @@ public final class VIFFmpegDecoder: VIAudioDecoding {
         )
         
         if avioContext == nil {
+            ioBuffer?.deallocate()
+            ioBuffer = nil
             throw VIDecoderError.fileOpenFailed(-1)
         }
-        
+
         // 3. Allocate AVFormatContext
         formatContext = avformat_alloc_context()
         formatContext?.pointee.pb = avioContext
-        
+
         // 4. Open input
         if avformat_open_input(&formatContext, nil, nil, nil) < 0 {
             formatContext = nil // Explicitly nil out to prevent double-free
+            // avformat_open_input 失败时不会释放 avio，需要手动清理
+            if let avio = avioContext {
+                // avio_alloc_context 接管了 ioBuffer，通过 avio 释放
+                avio.pointee.buffer.deallocate()
+                avio_context_free(&avioContext)
+            }
+            ioBuffer = nil
             throw VIDecoderError.fileOpenFailed(-2)
         }
         
@@ -286,14 +295,30 @@ private func readPacketCallback(opaque: UnsafeMutableRawPointer?, buf: UnsafeMut
 private func seekCallback(opaque: UnsafeMutableRawPointer?, offset: Int64, whence: Int32) -> Int64 {
     guard let opaque = opaque else { return -1 }
     let decoder = Unmanaged<VIFFmpegDecoder>.fromOpaque(opaque).takeUnretainedValue()
-    
+
     if whence == AVSEEK_SIZE {
         if let cl = decoder.source.contentLength {
             return cl
         }
         return -1
     }
-    
-    decoder.currentOffset = offset
-    return offset
+
+    // 去掉 AVSEEK_FORCE 标志位（如果有的话）
+    let realWhence = whence & ~AVSEEK_FORCE
+
+    switch realWhence {
+    case SEEK_SET:
+        decoder.currentOffset = offset
+    case SEEK_CUR:
+        decoder.currentOffset += offset
+    case SEEK_END:
+        if let cl = decoder.source.contentLength {
+            decoder.currentOffset = cl + offset
+        } else {
+            return -1
+        }
+    default:
+        return -1
+    }
+    return decoder.currentOffset
 }
