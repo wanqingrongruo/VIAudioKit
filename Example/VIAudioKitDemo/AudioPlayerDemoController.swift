@@ -74,6 +74,13 @@ final class AudioPlayerDemoController: UIViewController {
             url: URL(string: "https://leafli.oss-cn-shanghai.aliyuncs.com/%E9%9F%B3%E9%A2%91/%E5%A4%A9%E7%A9%BA%E4%B9%8B%E5%9F%8E.wma")!,
             isLocal: false
         ))
+        
+        items.append(AudioItem(
+            title: "华尔 wav-url",
+            url: URL(string: "http://cdn9002.iflyos.cn/whitenoise/09bead66f707b14fcf54b9e813a9056c.wav")!,
+            isLocal: false
+        ))
+        
 
         // --- Mix test (VIMixingDecoder) ---
         if items.count >= 2 {
