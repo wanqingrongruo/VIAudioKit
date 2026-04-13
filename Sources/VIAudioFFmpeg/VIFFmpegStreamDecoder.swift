@@ -4,7 +4,7 @@ import AVFoundation
 import VIAudioDecoder
 #endif
 
-#if COCOAPODS && canImport(CFFmpeg)
+#if COCOAPODS
 import CFFmpeg
 
 /// 基于 FFmpeg C API 的推送模式流解码器。

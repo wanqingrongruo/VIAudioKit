@@ -4,7 +4,7 @@ import AVFoundation
 import VIAudioDecoder
 #endif
 
-#if COCOAPODS && canImport(CFFmpeg)
+#if COCOAPODS
 import CFFmpeg
 
 /// Decoder implementation using FFmpeg C API to support OGG, WMA, APE, etc.

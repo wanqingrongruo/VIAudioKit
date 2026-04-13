@@ -17,7 +17,17 @@
       "Bash(swiftc -parse /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+Loading.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+Playback.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+Decoding.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+TimingAndBuffering.swift -I Sources)",
       "Bash(echo \"减少：$\\(\\(1170 - 229\\)\\) 行 \\($\\(echo \"scale=1; \\(1170-229\\)*100/1170\")",
       "WebFetch(domain:github.com)",
-      "Bash(swift test:*)"
+      "Bash(swift test:*)",
+      "Bash(xargs ls:*)",
+      "Bash(find:*)",
+      "Bash(swift package:*)",
+      "Bash(swift run:*)",
+      "Bash(nm .build/debug/libVIAudioFFmpeg.a)",
+      "Bash(plutil -p .build/artifacts/ffmpeg-kit-spm/avformat/libavformat.xcframework/Info.plist)",
+      "WebSearch",
+      "Bash(git ls-remote:*)",
+      "Bash(ls -la .build/checkouts/*/Sources/)",
+      "Bash(plutil -p .build/artifacts/ffmpeg-ios/avformat/avformat.xcframework/Info.plist)"
     ]
   }
 }

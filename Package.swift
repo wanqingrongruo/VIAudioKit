@@ -14,7 +14,8 @@ let package = Package(
         .library(name: "VIAudioFFmpeg", targets: ["VIAudioFFmpeg"]),
     ],
     dependencies: [
-        // .package(url: "https://github.com/yangliu-1995/ffmpeg-kit-spm", exact: "6.0.0")
+        // FFmpeg 支持仅在 CocoaPods 下可用
+        // 经过测试，现有的 SPM FFmpeg 包都无法提供可用的 Swift 模块
     ],
     targets: [
         .target(
@@ -36,7 +37,8 @@ let package = Package(
             dependencies: [
                 "VIAudioDecoder"
             ],
-            path: "Sources/VIAudioFFmpeg"
+            path: "Sources/VIAudioFFmpeg",
+            exclude: ["include"]
         ),
         .testTarget(
             name: "VIAudioDownloaderTests",
