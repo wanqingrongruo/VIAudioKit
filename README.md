@@ -243,7 +243,7 @@ var dlConfig = VIDownloaderConfiguration(
 dlConfig.urlCanonicalizer = VIDownloaderConfiguration.stripQueryCanonicalizer
 
 // 自定义播放器起播配置
-let config = VIPlayerConfiguration(
+var config = VIPlayerConfiguration(
     downloaderConfiguration: dlConfig,
     decodeBufferCount: 16,               // 解码缓冲区数量
     framesPerBuffer: 8192,               // 每个缓冲区帧数
@@ -252,8 +252,53 @@ let config = VIPlayerConfiguration(
     secondsRequiredAfterBufferUnderrun: 3.0  // 发生卡顿恢复时需缓冲的时长
 )
 
+// 指定特定格式使用特定解码器（可选）
+// 如果不指定，将按 decoderTypes 数组顺序自动匹配
+config.decoderMapping["ogg"] = VIFFmpegDecoder.self       // 本地 OGG 文件使用 FFmpeg 解码
+config.streamDecoderMapping["opus"] = VIFFmpegStreamDecoder.self  // 网络 OPUS 流使用 FFmpeg 解码
+
 let player = VIAudioPlayer(configuration: config)
 ```
+
+## 解码器选择机制
+
+VIAudioKit 提供两种方式来控制解码器的选择：
+
+### 方式 1：数组顺序匹配（默认）
+
+通过 `decoderTypes` 和 `streamDecoderTypes` 数组注册解码器，播放器会按数组顺序查找第一个支持该格式的解码器：
+
+```swift
+let player = VIAudioPlayer()
+
+// 注册解码器（按优先级顺序）
+player.decoderTypes.append(VIFFmpegDecoder.self)      // 优先使用 FFmpeg
+player.streamDecoderTypes.append(VIFFmpegStreamDecoder.self)
+```
+
+### 方式 2：精确映射（推荐）
+
+通过 `VIPlayerConfiguration` 的 `decoderMapping` 和 `streamDecoderMapping` 为特定格式指定解码器：
+
+```swift
+var config = VIPlayerConfiguration()
+
+// 精确指定：OGG 格式使用 FFmpeg 解码器
+config.decoderMapping["ogg"] = VIFFmpegDecoder.self
+config.streamDecoderMapping["ogg"] = VIFFmpegStreamDecoder.self
+
+// MP3 使用原生解码器（即使 FFmpeg 也支持）
+config.decoderMapping["mp3"] = VINativeDecoder.self
+
+let player = VIAudioPlayer(configuration: config)
+```
+
+**优势**：
+- 精确控制每种格式的解码器
+- 避免多个解码器支持同一格式时的歧义
+- 性能更好（O(1) 字典查找 vs O(n) 数组遍历）
+
+**查找顺序**：先查找 `decoderMapping`，如果未指定则回退到 `decoderTypes` 数组顺序匹配。
 
 ## 扩展解码器协议
 
@@ -269,8 +314,13 @@ final class MyOggStreamDecoder: VIStreamDecoding {
     // 实现 open, feed, seek, flush, close 等方法...
 }
 
-// 注册
+// 方式 1：注册到数组
 player.streamDecoderTypes.append(MyOggStreamDecoder.self)
+
+// 方式 2：精确映射（推荐）
+var config = VIPlayerConfiguration()
+config.streamDecoderMapping["ogg"] = MyOggStreamDecoder.self
+let player = VIAudioPlayer(configuration: config)
 ```
 
 ## 状态流转

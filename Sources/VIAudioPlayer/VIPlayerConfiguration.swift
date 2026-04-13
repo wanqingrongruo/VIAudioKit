@@ -1,6 +1,7 @@
 import Foundation
 #if !COCOAPODS
 import VIAudioDownloader
+import VIAudioDecoder
 #endif
 
 /// Configuration for `VIAudioPlayer`.
@@ -31,6 +32,33 @@ public struct VIPlayerConfiguration: Sendable {
     /// Typically larger than `secondsRequiredToStartPlaying` to avoid rapid rebuffering.
     public var secondsRequiredAfterBufferUnderrun: TimeInterval
 
+    // MARK: - Decoder selection
+
+    /// 为特定文件扩展名指定 Pull 模式解码器
+    ///
+    /// 使用场景：
+    /// - 多个解码器支持同一格式时，指定优先使用哪个
+    /// - 强制某些格式使用特定解码器
+    ///
+    /// 示例：
+    /// ```swift
+    /// config.decoderMapping["ogg"] = VIFFmpegDecoder.self
+    /// config.decoderMapping["mp3"] = VINativeDecoder.self
+    /// ```
+    ///
+    /// 如果未指定映射，则使用 `VIAudioPlayer.decoderTypes` 数组顺序匹配
+    public var decoderMapping: [String: VIAudioDecoding.Type]
+
+    /// 为特定文件扩展名指定 Push 模式解码器（网络流）
+    ///
+    /// 示例：
+    /// ```swift
+    /// config.streamDecoderMapping["opus"] = VIFFmpegStreamDecoder.self
+    /// ```
+    ///
+    /// 如果未指定映射，则使用 `VIAudioPlayer.streamDecoderTypes` 数组顺序匹配
+    public var streamDecoderMapping: [String: VIStreamDecoding.Type]
+
     public init(
         downloaderConfiguration: VIDownloaderConfiguration = VIDownloaderConfiguration(),
         decodeBufferCount: Int = 8,
@@ -38,7 +66,9 @@ public struct VIPlayerConfiguration: Sendable {
         timeUpdateInterval: TimeInterval = 0.05,
         secondsRequiredToStartPlaying: TimeInterval = 1.0,
         secondsRequiredAfterSeek: TimeInterval = 0.5,
-        secondsRequiredAfterBufferUnderrun: TimeInterval = 3.0
+        secondsRequiredAfterBufferUnderrun: TimeInterval = 3.0,
+        decoderMapping: [String: VIAudioDecoding.Type] = [:],
+        streamDecoderMapping: [String: VIStreamDecoding.Type] = [:]
     ) {
         self.downloaderConfiguration = downloaderConfiguration
         self.decodeBufferCount = decodeBufferCount
@@ -47,5 +77,7 @@ public struct VIPlayerConfiguration: Sendable {
         self.secondsRequiredToStartPlaying = secondsRequiredToStartPlaying
         self.secondsRequiredAfterSeek = secondsRequiredAfterSeek
         self.secondsRequiredAfterBufferUnderrun = secondsRequiredAfterBufferUnderrun
+        self.decoderMapping = decoderMapping
+        self.streamDecoderMapping = streamDecoderMapping
     }
 }

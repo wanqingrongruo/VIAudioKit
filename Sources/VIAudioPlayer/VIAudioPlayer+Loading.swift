@@ -78,12 +78,21 @@ extension VIAudioPlayer {
                 let ext = (extensionHint?.isEmpty == false) ? extensionHint! : source.fileExtension
                 VILogger.debug("[VIAudioPlayer] load: ext=\(ext) size=\(source.contentLength ?? -1)")
 
-                guard let decoderType = self.decoderTypes.first(where: {
-                    $0.supportedExtensions.contains(ext)
-                }) else {
-                    throw VIPlayerError.decoderCreationFailed(
-                        VIDecoderError.unsupportedFormat(ext)
-                    )
+                // 优先查找映射的解码器
+                let decoderType: VIAudioDecoding.Type
+                if let mappedType = self.configuration.decoderMapping[ext] {
+                    VILogger.debug("[VIAudioPlayer] load: using mapped decoder for \(ext)")
+                    decoderType = mappedType
+                } else {
+                    // 回退到顺序匹配
+                    guard let type = self.decoderTypes.first(where: {
+                        $0.supportedExtensions.contains(ext)
+                    }) else {
+                        throw VIPlayerError.decoderCreationFailed(
+                            VIDecoderError.unsupportedFormat(ext)
+                        )
+                    }
+                    decoderType = type
                 }
 
                 let decoder = try decoderType.init(source: source)
@@ -154,14 +163,22 @@ extension VIAudioPlayer {
             cacheManager: downloader.cacheManager,
             configuration: configuration.downloaderConfiguration
         )
-        // Push-mode (network files)
-        let sdType = streamDecoderTypes.first(where: {
-            $0.supportedExtensions.contains(ext)
-        }) ?? VIStreamDecoder.self
-        
+
+        // 优先查找映射的流解码器
+        let sdType: VIStreamDecoding.Type
+        if let mappedType = configuration.streamDecoderMapping[ext] {
+            VILogger.debug("[VIAudioPlayer] load: using mapped stream decoder for \(ext)")
+            sdType = mappedType
+        } else {
+            // 回退到顺序匹配
+            sdType = streamDecoderTypes.first(where: {
+                $0.supportedExtensions.contains(ext)
+            }) ?? VIStreamDecoder.self
+        }
+
         let sd = sdType.init()
         sd.framesPerBuffer = configuration.framesPerBuffer
-        if var extSd = sd as? VIStreamDecodingWithExtension {
+        if let extSd = sd as? VIStreamDecodingWithExtension {
             extSd.fileExtension = ext
         }
 

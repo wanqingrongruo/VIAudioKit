@@ -27,7 +27,8 @@
       "WebSearch",
       "Bash(git ls-remote:*)",
       "Bash(ls -la .build/checkouts/*/Sources/)",
-      "Bash(plutil -p .build/artifacts/ffmpeg-ios/avformat/avformat.xcframework/Info.plist)"
+      "Bash(plutil -p .build/artifacts/ffmpeg-ios/avformat/avformat.xcframework/Info.plist)",
+      "Bash(ls -la *.md *.podspec)"
     ]
   }
 }
