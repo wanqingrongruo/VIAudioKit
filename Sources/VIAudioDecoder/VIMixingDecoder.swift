@@ -1,6 +1,9 @@
 import Foundation
 import AVFoundation
 import Accelerate
+#if !COCOAPODS
+import VIAudioDownloader
+#endif
 
 /// A custom decoder that mixes multiple local audio files into a single stream.
 /// Use a `.vimix` file containing a JSON array of file URLs to initialize.

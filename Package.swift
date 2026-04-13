@@ -14,7 +14,7 @@ let package = Package(
         .library(name: "VIAudioFFmpeg", targets: ["VIAudioFFmpeg"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/yangliu-1995/ffmpeg-kit-spm", exact: "6.0.0")
+        // .package(url: "https://github.com/yangliu-1995/ffmpeg-kit-spm", exact: "6.0.0")
     ],
     targets: [
         .target(
@@ -34,8 +34,7 @@ let package = Package(
         .target(
             name: "VIAudioFFmpeg",
             dependencies: [
-                "VIAudioDecoder",
-                .product(name: "ffmpegkit", package: "ffmpeg-kit-spm")
+                "VIAudioDecoder"
             ],
             path: "Sources/VIAudioFFmpeg"
         ),

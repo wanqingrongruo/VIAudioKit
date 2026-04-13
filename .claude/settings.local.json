@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/*.swift)",
+      "Bash(wc -l /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioDecoder/*.swift)",
+      "Bash(wc -l /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioDownloader/*.swift)",
+      "Bash(wc -l /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioFFmpeg/*.swift)",
+      "Bash(swift build:*)",
+      "Bash(swiftc -parse /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioFFmpeg/VIRingBuffer.swift)",
+      "Bash(xxd /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer.swift)",
+      "Bash(sed -n '229,570p' /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer.swift)",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)",
+      "Bash(xxd)",
+      "Bash(ls -la /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer*.swift)",
+      "Bash(awk '{print $9, $5}')",
+      "Bash(swiftc -parse /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+Loading.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+Playback.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+Decoding.swift /Users/roni/Desktop/me/VIAudioKit/Sources/VIAudioPlayer/VIAudioPlayer+TimingAndBuffering.swift -I Sources)",
+      "Bash(echo \"减少：$\\(\\(1170 - 229\\)\\) 行 \\($\\(echo \"scale=1; \\(1170-229\\)*100/1170\")",
+      "WebFetch(domain:github.com)",
+      "Bash(swift test:*)"
+    ]
+  }
+}

@@ -4,9 +4,8 @@ import AVFoundation
 import VIAudioDecoder
 #endif
 
-#if canImport(CFFmpeg)
+#if COCOAPODS && canImport(CFFmpeg)
 import CFFmpeg
-#endif
 
 /// Decoder implementation using FFmpeg C API to support OGG, WMA, APE, etc.
 public final class VIFFmpegDecoder: VIAudioDecoding {
@@ -322,3 +321,5 @@ private func seekCallback(opaque: UnsafeMutableRawPointer?, offset: Int64, whenc
     }
     return decoder.currentOffset
 }
+
+#endif

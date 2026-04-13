@@ -1,9 +1,8 @@
 import Foundation
 import AVFoundation
 
-#if canImport(CFFmpeg)
+#if COCOAPODS && canImport(CFFmpeg)
 import CFFmpeg
-#endif
 
 /// Converts decoded FFmpeg frames (any format/layout) to Float32 non-interleaved PCM buffers.
 internal class FFmpegResampler {
@@ -142,3 +141,5 @@ internal class FFmpegResampler {
         return pcmBuffer
     }
 }
+
+#endif

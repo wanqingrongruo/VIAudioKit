@@ -9,9 +9,9 @@
 /* Begin PBXAggregateTarget section */
 		99C9B375C2185AA3E53316AC4BF6ECE7 /* ffmpeg-kit-ios-full */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 713190BDA516EA71A77B835B9AE0AB1E /* Build configuration list for PBXAggregateTarget "ffmpeg-kit-ios-full" */;
+			buildConfigurationList = BA3FCC6D13871198949758E7C613A877 /* Build configuration list for PBXAggregateTarget "ffmpeg-kit-ios-full" */;
 			buildPhases = (
-				059342F474BCA587B188EA555D7EB26F /* [CP] Copy XCFrameworks */,
+				7EBC5A3157A78FD9941E4C7ED030944F /* [CP] Copy XCFrameworks */,
 			);
 			dependencies = (
 			);
@@ -20,56 +20,61 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		044F736F2E290CEA59C2DD21548AAB71 /* VIPlayerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17A02BFB8673BB9208CCE39BA1485AF /* VIPlayerState.swift */; };
-		0FDD5FD7E0F831885787B49A582B5067 /* VINativeDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC9B3E0D1521A253C002B9057A6BE78 /* VINativeDecoder.swift */; };
-		0FF019F5B66484F095B29F7C42F44E44 /* VIRangeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A43B8316B826C15A6136013DB85D5449 /* VIRangeRequest.swift */; };
-		174BA583E71912181D9DBC22BA354B77 /* VIAudioDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDF8517CB13415F9B638B343A98E6F3 /* VIAudioDecoding.swift */; };
-		1AA60727159573177DBE3168B39D4751 /* VIDownloadTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = D33B66A31BDEA99D3400F218EC0F4FB8 /* VIDownloadTask.swift */; };
-		1B71BD2DD8DDCD96EE1764A8F442A121 /* VIAudioSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1180B659D16C5985576D8E93D1A6D0 /* VIAudioSource.swift */; };
-		24EDEAD228EBC9CC0FEC75A54E788608 /* VIDownloaderConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4753A02326430E2D994BD12314BD7559 /* VIDownloaderConfiguration.swift */; };
-		2E474729992AD732CC9ECF8A4C7B8444 /* VIAudioBufferQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC555B8358A3A648FA577CD88F783BDA /* VIAudioBufferQueue.swift */; };
-		3C7D0C3B83DC77E0D9F8B6E7CE5846A1 /* VILocalFileSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3D7AA70009DF571680BD1F3B264D38 /* VILocalFileSource.swift */; };
-		48C1F01B0C04A3C1677A6E50EA3A7566 /* VIPushAudioSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38266F802D191C5331890EA9C60F7303 /* VIPushAudioSource.swift */; };
-		494E7D0E9EBDF3D87BE27E30EB07E27C /* VILogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19757DE5808D97D38F32B0DA6BB576CC /* VILogger.swift */; };
-		5F4218A9574FD11A0D99DC412AF0375A /* VIStreamDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD9D229C62D33DC850807160A3801DAE /* VIStreamDecoder.swift */; };
-		6277C4F7BF2556C142E77ED3C1C0F88F /* VICacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A20790198FAB64D5A31341B4870B91B /* VICacheManager.swift */; };
-		67B8783AF4265E8C64DB99B4BFC702ED /* VIAudioRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11F7340A35DA14D2425D3867262C6DE /* VIAudioRenderer.swift */; };
-		79108433274060ED5D7943FE3C8FDF1D /* VIAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6AF1D46443CAE55D300EA92D24CB79 /* VIAudioPlayer.swift */; };
-		7CCF24ACE75C9FD6E8BEEAA67410ACAE /* VIFFmpegDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5FDFEEF04EC42BE981BD264334425A /* VIFFmpegDecoder.swift */; };
+		05B6679C86E68990FC1EC924C71C0829 /* VINativeDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD4A3D9049DF43A0D88F702334EE9B3A /* VINativeDecoder.swift */; };
+		0F6E0A15D0125D20017BBC5D7BD25730 /* VIAudioKit-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 06BDAE3FCD0E1B77037DCB6363984C04 /* VIAudioKit-dummy.m */; };
+		0FF306A6B2238B4B172B2EB98CE5C749 /* VIAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E187597D4A8073E85DECB073F7FF7D17 /* VIAudioPlayer.swift */; };
+		1BED85437CAE7A684F55CAF263007F3C /* VIDownloadTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = B285992EE5AAFACA0CD2ACFF432C141E /* VIDownloadTask.swift */; };
+		1D0A53258576ABBCE1DC6C69FE924A6D /* VICacheSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCA8A91D1939608719AD70EFCBD2748 /* VICacheSegment.swift */; };
+		1DAC7B36D8ABB581FE8DC729AD0FC02F /* VIPlayerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532B7FA95B199746D226C31876321C1D /* VIPlayerState.swift */; };
+		22666EB473D03CA48E999233500263E2 /* VILogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8527FA3BAA6C370F66743310255D31F2 /* VILogger.swift */; };
+		27D3E179479878272E2F5078A36079DC /* FFmpegResampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B961EA1387FE6ECB644850BD40B84C41 /* FFmpegResampler.swift */; };
+		325B98A2F86B62942C9A462217C985FA /* VIFFmpegDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A66660E8833E6815E8FA28D5F97D5B /* VIFFmpegDecoder.swift */; };
+		46EFD1235EA4C104923FA4D69217AEE9 /* VIFFmpegStreamDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07289361CBB41002E151B4154C2EA269 /* VIFFmpegStreamDecoder.swift */; };
+		55EBBF638D94F59345E8BB7F73FA5E72 /* VIRingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D9CC4FA1E3146E67EDD69E5223D141 /* VIRingBuffer.swift */; };
+		615E5ADB0192AF0C2DB64A558FA021F8 /* VIAudioBufferQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D601F2A4B3DF1FDEAF9BB8FFAA7F4303 /* VIAudioBufferQueue.swift */; };
+		6C0B121896B142E24A599A67231F1AC2 /* VIMixingDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D7DE037952DFD70B82834A4DDC5A04 /* VIMixingDecoder.swift */; };
+		719FA5F024A10A1DA98BD8FAA086B04A /* VIDownloaderConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD70997BE0EA8060F72235BDC61B8F2 /* VIDownloaderConfiguration.swift */; };
+		78D160A044B7E8FDED036833C1C2D2E3 /* VINetworkAudioSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E49376091D8FB63097FC81A12A1C809 /* VINetworkAudioSource.swift */; };
+		7F7B9A5B8A159E85DDA0FCC5D04B0B54 /* VIRangeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E2FDB7937B02862C6641A3B55A2375 /* VIRangeRequest.swift */; };
 		89ABCEE2F75F1CAFA0EC4B35E7BD5347 /* Pods-VIAudioKitDemo-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 018ED941F4F1A0A4DC07D28DD3D2845C /* Pods-VIAudioKitDemo-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8AAED9AF03733C4F021C098359307B58 /* VIDataSourceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0099FA4EA7BD60B516E2693DC7466BEF /* VIDataSourceResolver.swift */; };
-		8DDF5383CB8572C50EC508FB36A2CE82 /* VICacheSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87415DBDE5AC4601290FD14BE1BF0C48 /* VICacheSegment.swift */; };
-		8FFF50EA55579A92E784614CD9A47BAC /* VIChunkedDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF01C5A1CAC5CECE5FB1630A2542B1A /* VIChunkedDownloader.swift */; };
-		91A35539F9CC67BEC0C1706F8A983FB7 /* VIPlayerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE67BC0C81A1722C7F40DDEB2A82FA9F /* VIPlayerConfiguration.swift */; };
+		8F5EACB7722B1A06C9F47ADF6CF95E01 /* VICacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADD2B8E9209B7E916DBD9B7A5D1C964 /* VICacheManager.swift */; };
+		94F18EB755DAF30E64F26F1A8A130842 /* VIPlayerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251B0EAAFFE4E0AF6947DA355862C71E /* VIPlayerConfiguration.swift */; };
+		9643144DAE915D575E2C457F65BB0F93 /* VICacheUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6831846F99F76B2A60A6542F4A24E6E6 /* VICacheUnit.swift */; };
+		A6F88CECD807E82ACACF917B56C79435 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */; };
+		A7600F68A0E1A07D5DAF0949A8B4C0D6 /* VIPushAudioSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A57560F11FD3425819C51C48348C86E /* VIPushAudioSource.swift */; };
+		A953DBD28EFE1C12C02BEBC502130448 /* VIAudioDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = E23A199E392F9787A986F532CCCADC58 /* VIAudioDecoding.swift */; };
+		AFCABC12CAB8964B609DD422130ACBCB /* VIAudioPlayer+Loading.swift in Sources */ = {isa = PBXBuildFile; fileRef = F41221B92671129E721C4102A9D84BB7 /* VIAudioPlayer+Loading.swift */; };
+		B1DA0FA194CC36A5B6FE027E82D68E85 /* VIAudioPlayer+Decoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A3FB8C77535D976F72204D235A59E8 /* VIAudioPlayer+Decoding.swift */; };
+		B2FBD2CB8D88FC64642DE1330B96E53F /* VIDataSourceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14725B5843C75E8C1E346E09A99614DA /* VIDataSourceResolver.swift */; };
 		B6666B3F2AD14F23215993F6966BCCFD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */; };
-		C39CDFF87DE8EFC540B3F953305AB7AB /* VIMixingDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6D40A7CD60AB3B6A523D237092E95D /* VIMixingDecoder.swift */; };
-		C588E4D628A64DD55107106748AA7627 /* VIFFmpegStreamDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ACF50037FE5D4179144CF85F75DC684 /* VIFFmpegStreamDecoder.swift */; };
-		CA18CF0967F524C74576D0D27A94EDCD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */; };
-		CAC8DC4EAD35C3436C9E0BA93BDAF200 /* VIStreamDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D3BB3B4654F15094C2DDF0F0BDDAE1 /* VIStreamDecoding.swift */; };
-		D88CA93B31585F53D172B45591947F66 /* FFmpegResampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCC8A1AB58C020232A7B0445BDBEC87A /* FFmpegResampler.swift */; };
-		E4A91EA448ABCECCD50304959689C776 /* VICacheUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C55933F8DDFADCF919676E417316E0F /* VICacheUnit.swift */; };
-		F06E12C5E32BEF357208FE281143BCB3 /* VIAudioKit-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = AD74487142663A8C10073FA19AE42F93 /* VIAudioKit-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		F0AE90072AD5361E5917EC2A465F6B44 /* VIAudioKit-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = CA530258807272A4B7D5A9587D9A63C6 /* VIAudioKit-dummy.m */; };
-		F810DBE1EA9C8469B3A95001EC0470FA /* VINetworkAudioSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE74AE1479063D2ACD66987D64EEA5D /* VINetworkAudioSource.swift */; };
+		C3DF57B1832C246DF71396A657C4FFBA /* VIAudioPlayer+Playback.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6ECAB53063B6F3419A8EC0367E9D7F5 /* VIAudioPlayer+Playback.swift */; };
+		C5D04CFD190C3CEB87F3A0A5748D2B62 /* VIAudioKit-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BA901421C2C03B268A5677B65264259 /* VIAudioKit-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C7D5FF78E021E23F9208BBBDFA8D6B49 /* VIAudioPlayer+TimingAndBuffering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCD3F9C8CCCFBA5E4B58BCEB86C376A /* VIAudioPlayer+TimingAndBuffering.swift */; };
+		CC96F62AB71C4E1304069CAEE576FBEA /* VILocalFileSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DF557C4D433DBC9074DFE66A892EDB /* VILocalFileSource.swift */; };
+		D06A122F20AB316B1BB05691772CE387 /* VIStreamDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9D01A76E128E1977B40B7FAF11C0C7 /* VIStreamDecoding.swift */; };
+		D790727A91C1C2CB4DCB69BBE9B3D9E6 /* VIChunkedDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C668A64AB4A5225D4AFB52A47A4AA /* VIChunkedDownloader.swift */; };
+		E37D8EF864DFB9ECE25620C5C2BBD522 /* VIAudioRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83B565646AFAC899D72AE6F855B1001 /* VIAudioRenderer.swift */; };
+		F41F26F55F0D40B5725A61B8164DF6AB /* VIStreamDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6D5DDF71BB1D4027A41420E268C289 /* VIStreamDecoder.swift */; };
+		F77D53B4A746E72A9A6B1C37C55D0456 /* VIAudioSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 311B4CDA5D61714C3D007C77B82934E2 /* VIAudioSource.swift */; };
 		F99232E8C7DD7483F453545B68511106 /* Pods-VIAudioKitDemo-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = F8089D9C09DB60FD054BEF03DB27393A /* Pods-VIAudioKitDemo-dummy.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		5BC1ADDDA8FE42B333FE3EB39B330E40 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 59ADFA0D6268F8C78BC5C92A79DFAB77;
-			remoteInfo = VIAudioKit;
-		};
-		BFDFE208894FA2BD02FB00F6A40C42EF /* PBXContainerItemProxy */ = {
+		8097D7C0A2CAAD12F1C75C76B4CDD420 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 99C9B375C2185AA3E53316AC4BF6ECE7;
 			remoteInfo = "ffmpeg-kit-ios-full";
 		};
-		F98CB7174F7E1E804AD32A40DCAF8E15 /* PBXContainerItemProxy */ = {
+		946CDF2236E8D2F3EA439AA5E77DAE7B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 59ADFA0D6268F8C78BC5C92A79DFAB77;
+			remoteInfo = VIAudioKit;
+		};
+		C5450DE45AD327CC336FE80B5E01972E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
 			proxyType = 1;
@@ -79,74 +84,79 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0099FA4EA7BD60B516E2693DC7466BEF /* VIDataSourceResolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIDataSourceResolver.swift; sourceTree = "<group>"; };
 		018ED941F4F1A0A4DC07D28DD3D2845C /* Pods-VIAudioKitDemo-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-VIAudioKitDemo-umbrella.h"; sourceTree = "<group>"; };
 		020CABE9AAC86A17F83389368FD6F8CB /* libavfilter.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = libavfilter.xcframework; path = "ffmpeg-kit-ios-full/libavfilter.xcframework"; sourceTree = "<group>"; };
 		0309CFD98C4F13F9D01E26AB6479CFE1 /* libswscale.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = libswscale.xcframework; path = "ffmpeg-kit-ios-full/libswscale.xcframework"; sourceTree = "<group>"; };
-		09BDFE56A923394EDD97871E01331558 /* VIAudioKit.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = VIAudioKit.modulemap; sourceTree = "<group>"; };
-		0C55933F8DDFADCF919676E417316E0F /* VICacheUnit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheUnit.swift; sourceTree = "<group>"; };
+		064C583D92447312A7FE9AE243C9A400 /* VIAudioKit-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "VIAudioKit-Info.plist"; sourceTree = "<group>"; };
+		06BDAE3FCD0E1B77037DCB6363984C04 /* VIAudioKit-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "VIAudioKit-dummy.m"; sourceTree = "<group>"; };
+		07289361CBB41002E151B4154C2EA269 /* VIFFmpegStreamDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VIFFmpegStreamDecoder.swift; path = Sources/VIAudioFFmpeg/VIFFmpegStreamDecoder.swift; sourceTree = "<group>"; };
+		14725B5843C75E8C1E346E09A99614DA /* VIDataSourceResolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIDataSourceResolver.swift; sourceTree = "<group>"; };
 		166280E71AA36F48BD7A36AA2D23B816 /* libavcodec.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = libavcodec.xcframework; path = "ffmpeg-kit-ios-full/libavcodec.xcframework"; sourceTree = "<group>"; };
 		17A9E875644A519ABC139F74C64A4C77 /* Pods-VIAudioKitDemo-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-VIAudioKitDemo-Info.plist"; sourceTree = "<group>"; };
-		19757DE5808D97D38F32B0DA6BB576CC /* VILogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VILogger.swift; sourceTree = "<group>"; };
-		1A20790198FAB64D5A31341B4870B91B /* VICacheManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheManager.swift; sourceTree = "<group>"; };
-		1ACF50037FE5D4179144CF85F75DC684 /* VIFFmpegStreamDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VIFFmpegStreamDecoder.swift; path = Sources/VIAudioFFmpeg/VIFFmpegStreamDecoder.swift; sourceTree = "<group>"; };
-		1C6D40A7CD60AB3B6A523D237092E95D /* VIMixingDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIMixingDecoder.swift; sourceTree = "<group>"; };
-		30D3B0158E06D0971445CCCEF8856143 /* VIAudioKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = VIAudioKit.debug.xcconfig; sourceTree = "<group>"; };
-		38266F802D191C5331890EA9C60F7303 /* VIPushAudioSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIPushAudioSource.swift; sourceTree = "<group>"; };
+		1D2206351ACA178CC3308935BF9E011D /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		1F6D5DDF71BB1D4027A41420E268C289 /* VIStreamDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIStreamDecoder.swift; sourceTree = "<group>"; };
+		23D7DE037952DFD70B82834A4DDC5A04 /* VIMixingDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIMixingDecoder.swift; sourceTree = "<group>"; };
+		251B0EAAFFE4E0AF6947DA355862C71E /* VIPlayerConfiguration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIPlayerConfiguration.swift; sourceTree = "<group>"; };
+		279C668A64AB4A5225D4AFB52A47A4AA /* VIChunkedDownloader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIChunkedDownloader.swift; sourceTree = "<group>"; };
+		311B4CDA5D61714C3D007C77B82934E2 /* VIAudioSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioSource.swift; sourceTree = "<group>"; };
 		384DDA2CB25005BD6479B5987C619DD4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		3A3D7AA70009DF571680BD1F3B264D38 /* VILocalFileSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VILocalFileSource.swift; sourceTree = "<group>"; };
 		3C25653D75A688452A06920DFDC7BCA8 /* Pods-VIAudioKitDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-VIAudioKitDemo.release.xcconfig"; sourceTree = "<group>"; };
 		4351B392F4F9B2B2A7116FB664F613DD /* libavutil.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = libavutil.xcframework; path = "ffmpeg-kit-ios-full/libavutil.xcframework"; sourceTree = "<group>"; };
-		4753A02326430E2D994BD12314BD7559 /* VIDownloaderConfiguration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIDownloaderConfiguration.swift; sourceTree = "<group>"; };
-		4CF01C5A1CAC5CECE5FB1630A2542B1A /* VIChunkedDownloader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIChunkedDownloader.swift; sourceTree = "<group>"; };
-		53609ADAB4E130A6D318230F46ED9BE1 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		48DF557C4D433DBC9074DFE66A892EDB /* VILocalFileSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VILocalFileSource.swift; sourceTree = "<group>"; };
+		532B7FA95B199746D226C31876321C1D /* VIPlayerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIPlayerState.swift; sourceTree = "<group>"; };
+		5A57560F11FD3425819C51C48348C86E /* VIPushAudioSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIPushAudioSource.swift; sourceTree = "<group>"; };
+		5AD70997BE0EA8060F72235BDC61B8F2 /* VIDownloaderConfiguration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIDownloaderConfiguration.swift; sourceTree = "<group>"; };
 		5C67C5ABA4B7349005FBF209251F6847 /* Pods-VIAudioKitDemo-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-VIAudioKitDemo-acknowledgements.plist"; sourceTree = "<group>"; };
-		63D3BB3B4654F15094C2DDF0F0BDDAE1 /* VIStreamDecoding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIStreamDecoding.swift; sourceTree = "<group>"; };
-		6E05BBAB3226071B1F3FF1FB78DE0C84 /* VIAudioKit.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = VIAudioKit.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		71281B64ECC647BB9363382617AB829B /* VIAudioKit-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "VIAudioKit-Info.plist"; sourceTree = "<group>"; };
+		5CCD3F9C8CCCFBA5E4B58BCEB86C376A /* VIAudioPlayer+TimingAndBuffering.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "VIAudioPlayer+TimingAndBuffering.swift"; sourceTree = "<group>"; };
+		5E49376091D8FB63097FC81A12A1C809 /* VINetworkAudioSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VINetworkAudioSource.swift; sourceTree = "<group>"; };
+		6831846F99F76B2A60A6542F4A24E6E6 /* VICacheUnit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheUnit.swift; sourceTree = "<group>"; };
+		748AA78E4B2231667BE8E05B376005D9 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		77D9CC4FA1E3146E67EDD69E5223D141 /* VIRingBuffer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VIRingBuffer.swift; path = Sources/VIAudioFFmpeg/VIRingBuffer.swift; sourceTree = "<group>"; };
+		787DA2C39983AA928A2ED9B0266AC979 /* VIAudioKit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = VIAudioKit.release.xcconfig; sourceTree = "<group>"; };
 		7DC960126A428FFD04E16C626DF6FA5E /* libswresample.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = libswresample.xcframework; path = "ffmpeg-kit-ios-full/libswresample.xcframework"; sourceTree = "<group>"; };
 		80033CE1EFB352B9BAC50A2CC21176C5 /* ffmpeg-kit-ios-full.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "ffmpeg-kit-ios-full.release.xcconfig"; sourceTree = "<group>"; };
-		87415DBDE5AC4601290FD14BE1BF0C48 /* VICacheSegment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheSegment.swift; sourceTree = "<group>"; };
+		8527FA3BAA6C370F66743310255D31F2 /* VILogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VILogger.swift; sourceTree = "<group>"; };
+		8657D538A5FF12D9C9DFCE15BF443302 /* VIAudioKit-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "VIAudioKit-prefix.pch"; sourceTree = "<group>"; };
+		86C8647BC1A5F6BCEF5D10FED194EF7B /* VIAudioKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = VIAudioKit.debug.xcconfig; sourceTree = "<group>"; };
+		8A9D01A76E128E1977B40B7FAF11C0C7 /* VIStreamDecoding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIStreamDecoding.swift; sourceTree = "<group>"; };
+		8BA901421C2C03B268A5677B65264259 /* VIAudioKit-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "VIAudioKit-umbrella.h"; sourceTree = "<group>"; };
+		8CCA8A91D1939608719AD70EFCBD2748 /* VICacheSegment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheSegment.swift; sourceTree = "<group>"; };
 		8E6BF21332CE62542E32A24F5E8D6F61 /* Pods-VIAudioKitDemo */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-VIAudioKitDemo"; path = Pods_VIAudioKitDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		A43B8316B826C15A6136013DB85D5449 /* VIRangeRequest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIRangeRequest.swift; sourceTree = "<group>"; };
-		AD74487142663A8C10073FA19AE42F93 /* VIAudioKit-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "VIAudioKit-umbrella.h"; sourceTree = "<group>"; };
-		AE67BC0C81A1722C7F40DDEB2A82FA9F /* VIPlayerConfiguration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIPlayerConfiguration.swift; sourceTree = "<group>"; };
+		9E1535A154D9D9B1A5C08D088A8A85F0 /* VIAudioKit.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = VIAudioKit.modulemap; sourceTree = "<group>"; };
+		A9E2FDB7937B02862C6641A3B55A2375 /* VIRangeRequest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIRangeRequest.swift; sourceTree = "<group>"; };
+		B0AD64ED1F76AA7BE8E15C263EA517FA /* VIAudioKit.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = VIAudioKit.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		B17CEFC7CE356DDBFF7787BFB9BF4561 /* Pods-VIAudioKitDemo-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-VIAudioKitDemo-acknowledgements.markdown"; sourceTree = "<group>"; };
+		B285992EE5AAFACA0CD2ACFF432C141E /* VIDownloadTask.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIDownloadTask.swift; sourceTree = "<group>"; };
+		B2A3FB8C77535D976F72204D235A59E8 /* VIAudioPlayer+Decoding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "VIAudioPlayer+Decoding.swift"; sourceTree = "<group>"; };
 		B4ACE5C626E201955FF1A4C928B77B9B /* ffmpegkit.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = ffmpegkit.xcframework; path = "ffmpeg-kit-ios-full/ffmpegkit.xcframework"; sourceTree = "<group>"; };
+		B961EA1387FE6ECB644850BD40B84C41 /* FFmpegResampler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FFmpegResampler.swift; path = Sources/VIAudioFFmpeg/FFmpegResampler.swift; sourceTree = "<group>"; };
 		BDA6972273F75D89BCE886C5CEFE894B /* ffmpeg-kit-ios-full.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "ffmpeg-kit-ios-full.debug.xcconfig"; sourceTree = "<group>"; };
 		BE4EB7088BDE5F3B571F57049F667ABC /* VIAudioKit */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = VIAudioKit; path = VIAudioKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BE5FDFEEF04EC42BE981BD264334425A /* VIFFmpegDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VIFFmpegDecoder.swift; path = Sources/VIAudioFFmpeg/VIFFmpegDecoder.swift; sourceTree = "<group>"; };
-		C79F88430492F33D2FDB7611E8614706 /* VIAudioKit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = VIAudioKit.release.xcconfig; sourceTree = "<group>"; };
 		C8813EBA8721C4D104E25364DC814956 /* Pods-VIAudioKitDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-VIAudioKitDemo.debug.xcconfig"; sourceTree = "<group>"; };
-		CA530258807272A4B7D5A9587D9A63C6 /* VIAudioKit-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "VIAudioKit-dummy.m"; sourceTree = "<group>"; };
-		CC555B8358A3A648FA577CD88F783BDA /* VIAudioBufferQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioBufferQueue.swift; sourceTree = "<group>"; };
 		CCF198EA102B280CDF14AEC259464983 /* Pods-VIAudioKitDemo-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-VIAudioKitDemo-frameworks.sh"; sourceTree = "<group>"; };
-		CD9D229C62D33DC850807160A3801DAE /* VIStreamDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIStreamDecoder.swift; sourceTree = "<group>"; };
-		D0EEC6CA8552D821D09C9860E808D60B /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
-		D17A02BFB8673BB9208CCE39BA1485AF /* VIPlayerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIPlayerState.swift; sourceTree = "<group>"; };
+		CD4A3D9049DF43A0D88F702334EE9B3A /* VINativeDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VINativeDecoder.swift; sourceTree = "<group>"; };
 		D27051662B371F9021F610D888924D6D /* libavformat.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = libavformat.xcframework; path = "ffmpeg-kit-ios-full/libavformat.xcframework"; sourceTree = "<group>"; };
-		D33B66A31BDEA99D3400F218EC0F4FB8 /* VIDownloadTask.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIDownloadTask.swift; sourceTree = "<group>"; };
-		DBDF8517CB13415F9B638B343A98E6F3 /* VIAudioDecoding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioDecoding.swift; sourceTree = "<group>"; };
+		D601F2A4B3DF1FDEAF9BB8FFAA7F4303 /* VIAudioBufferQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioBufferQueue.swift; sourceTree = "<group>"; };
+		D7A66660E8833E6815E8FA28D5F97D5B /* VIFFmpegDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VIFFmpegDecoder.swift; path = Sources/VIAudioFFmpeg/VIFFmpegDecoder.swift; sourceTree = "<group>"; };
 		DF7089FE28EA099D69E08D344EF8089F /* Pods-VIAudioKitDemo.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-VIAudioKitDemo.modulemap"; sourceTree = "<group>"; };
-		E11F7340A35DA14D2425D3867262C6DE /* VIAudioRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioRenderer.swift; sourceTree = "<group>"; };
+		E187597D4A8073E85DECB073F7FF7D17 /* VIAudioPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioPlayer.swift; sourceTree = "<group>"; };
+		E23A199E392F9787A986F532CCCADC58 /* VIAudioDecoding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioDecoding.swift; sourceTree = "<group>"; };
 		E4C41EB6E6166B806947C32B28C2FB68 /* ffmpeg-kit-ios-full-xcframeworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "ffmpeg-kit-ios-full-xcframeworks.sh"; sourceTree = "<group>"; };
-		EB687066F34E961621B48827582CFD58 /* VIAudioKit-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "VIAudioKit-prefix.pch"; sourceTree = "<group>"; };
-		ECE74AE1479063D2ACD66987D64EEA5D /* VINetworkAudioSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VINetworkAudioSource.swift; sourceTree = "<group>"; };
-		EE1180B659D16C5985576D8E93D1A6D0 /* VIAudioSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioSource.swift; sourceTree = "<group>"; };
+		E83B565646AFAC899D72AE6F855B1001 /* VIAudioRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioRenderer.swift; sourceTree = "<group>"; };
 		F2CF12AFD8136876BE4C34742BC60301 /* libavdevice.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = libavdevice.xcframework; path = "ffmpeg-kit-ios-full/libavdevice.xcframework"; sourceTree = "<group>"; };
+		F41221B92671129E721C4102A9D84BB7 /* VIAudioPlayer+Loading.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "VIAudioPlayer+Loading.swift"; sourceTree = "<group>"; };
+		F6ECAB53063B6F3419A8EC0367E9D7F5 /* VIAudioPlayer+Playback.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "VIAudioPlayer+Playback.swift"; sourceTree = "<group>"; };
 		F8089D9C09DB60FD054BEF03DB27393A /* Pods-VIAudioKitDemo-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-VIAudioKitDemo-dummy.m"; sourceTree = "<group>"; };
-		FCC8A1AB58C020232A7B0445BDBEC87A /* FFmpegResampler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FFmpegResampler.swift; path = Sources/VIAudioFFmpeg/FFmpegResampler.swift; sourceTree = "<group>"; };
-		FDC9B3E0D1521A253C002B9057A6BE78 /* VINativeDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VINativeDecoder.swift; sourceTree = "<group>"; };
-		FE6AF1D46443CAE55D300EA92D24CB79 /* VIAudioPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VIAudioPlayer.swift; sourceTree = "<group>"; };
+		FADD2B8E9209B7E916DBD9B7A5D1C964 /* VICacheManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VICacheManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		04D1500D8D63203F5B05A8036F344273 /* Frameworks */ = {
+		3BD58B320785113492FBBCA44982B460 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CA18CF0967F524C74576D0D27A94EDCD /* Foundation.framework in Frameworks */,
+				A6F88CECD807E82ACACF917B56C79435 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,12 +171,47 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		274CBE5B55C2A2953E0993AB5584EB70 /* FFmpeg */ = {
+		019C5931B9F5C6C39D6D08B05ED4A62B /* VIAudioPlayer */ = {
 			isa = PBXGroup;
 			children = (
-				FCC8A1AB58C020232A7B0445BDBEC87A /* FFmpegResampler.swift */,
-				BE5FDFEEF04EC42BE981BD264334425A /* VIFFmpegDecoder.swift */,
-				1ACF50037FE5D4179144CF85F75DC684 /* VIFFmpegStreamDecoder.swift */,
+				D601F2A4B3DF1FDEAF9BB8FFAA7F4303 /* VIAudioBufferQueue.swift */,
+				E187597D4A8073E85DECB073F7FF7D17 /* VIAudioPlayer.swift */,
+				B2A3FB8C77535D976F72204D235A59E8 /* VIAudioPlayer+Decoding.swift */,
+				F41221B92671129E721C4102A9D84BB7 /* VIAudioPlayer+Loading.swift */,
+				F6ECAB53063B6F3419A8EC0367E9D7F5 /* VIAudioPlayer+Playback.swift */,
+				5CCD3F9C8CCCFBA5E4B58BCEB86C376A /* VIAudioPlayer+TimingAndBuffering.swift */,
+				E83B565646AFAC899D72AE6F855B1001 /* VIAudioRenderer.swift */,
+				251B0EAAFFE4E0AF6947DA355862C71E /* VIPlayerConfiguration.swift */,
+				532B7FA95B199746D226C31876321C1D /* VIPlayerState.swift */,
+			);
+			name = VIAudioPlayer;
+			path = Sources/VIAudioPlayer;
+			sourceTree = "<group>";
+		};
+		08C6AB838E41E406948AE134CD0D0361 /* VIAudioDownloader */ = {
+			isa = PBXGroup;
+			children = (
+				FADD2B8E9209B7E916DBD9B7A5D1C964 /* VICacheManager.swift */,
+				8CCA8A91D1939608719AD70EFCBD2748 /* VICacheSegment.swift */,
+				6831846F99F76B2A60A6542F4A24E6E6 /* VICacheUnit.swift */,
+				279C668A64AB4A5225D4AFB52A47A4AA /* VIChunkedDownloader.swift */,
+				14725B5843C75E8C1E346E09A99614DA /* VIDataSourceResolver.swift */,
+				5AD70997BE0EA8060F72235BDC61B8F2 /* VIDownloaderConfiguration.swift */,
+				B285992EE5AAFACA0CD2ACFF432C141E /* VIDownloadTask.swift */,
+				8527FA3BAA6C370F66743310255D31F2 /* VILogger.swift */,
+				A9E2FDB7937B02862C6641A3B55A2375 /* VIRangeRequest.swift */,
+			);
+			name = VIAudioDownloader;
+			path = Sources/VIAudioDownloader;
+			sourceTree = "<group>";
+		};
+		1DA3FD0637D58892C9CE3779D413D0F8 /* FFmpeg */ = {
+			isa = PBXGroup;
+			children = (
+				B961EA1387FE6ECB644850BD40B84C41 /* FFmpegResampler.swift */,
+				D7A66660E8833E6815E8FA28D5F97D5B /* VIFFmpegDecoder.swift */,
+				07289361CBB41002E151B4154C2EA269 /* VIFFmpegStreamDecoder.swift */,
+				77D9CC4FA1E3146E67EDD69E5223D141 /* VIRingBuffer.swift */,
 			);
 			name = FFmpeg;
 			sourceTree = "<group>";
@@ -174,9 +219,26 @@
 		333C71A9A6D4089858C6F8D082CFF219 /* Development Pods */ = {
 			isa = PBXGroup;
 			children = (
-				7200953C8CE359DDE19AB90DE02516A7 /* VIAudioKit */,
+				B432AAC631ACE586CC57AD98973C6063 /* VIAudioKit */,
 			);
 			name = "Development Pods";
+			sourceTree = "<group>";
+		};
+		33D5B42A2BF2577D0FD016C38049777A /* VIAudioDecoder */ = {
+			isa = PBXGroup;
+			children = (
+				E23A199E392F9787A986F532CCCADC58 /* VIAudioDecoding.swift */,
+				311B4CDA5D61714C3D007C77B82934E2 /* VIAudioSource.swift */,
+				48DF557C4D433DBC9074DFE66A892EDB /* VILocalFileSource.swift */,
+				23D7DE037952DFD70B82834A4DDC5A04 /* VIMixingDecoder.swift */,
+				CD4A3D9049DF43A0D88F702334EE9B3A /* VINativeDecoder.swift */,
+				5E49376091D8FB63097FC81A12A1C809 /* VINetworkAudioSource.swift */,
+				5A57560F11FD3425819C51C48348C86E /* VIPushAudioSource.swift */,
+				1F6D5DDF71BB1D4027A41420E268C289 /* VIStreamDecoder.swift */,
+				8A9D01A76E128E1977B40B7FAF11C0C7 /* VIStreamDecoding.swift */,
+			);
+			name = VIAudioDecoder;
+			path = Sources/VIAudioDecoder;
 			sourceTree = "<group>";
 		};
 		3527C3003606AE05E8EDE8D3AF334083 /* Pods-VIAudioKitDemo */ = {
@@ -213,6 +275,16 @@
 			name = "Targets Support Files";
 			sourceTree = "<group>";
 		};
+		447408C67C90E05D95EA4A159DE53524 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				33D5B42A2BF2577D0FD016C38049777A /* VIAudioDecoder */,
+				08C6AB838E41E406948AE134CD0D0361 /* VIAudioDownloader */,
+				019C5931B9F5C6C39D6D08B05ED4A62B /* VIAudioPlayer */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
 		4ABF5214F4F47CDB56B3BCA89E4A384F /* ffmpeg-kit-ios-full */ = {
 			isa = PBXGroup;
 			children = (
@@ -231,46 +303,14 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
-		680734CD2EB7371C1BDCD6C362587573 /* VIAudioPlayer */ = {
+		7AB297B3E8E9D18A14A1579AF5AAAEFA /* Pod */ = {
 			isa = PBXGroup;
 			children = (
-				CC555B8358A3A648FA577CD88F783BDA /* VIAudioBufferQueue.swift */,
-				FE6AF1D46443CAE55D300EA92D24CB79 /* VIAudioPlayer.swift */,
-				E11F7340A35DA14D2425D3867262C6DE /* VIAudioRenderer.swift */,
-				AE67BC0C81A1722C7F40DDEB2A82FA9F /* VIPlayerConfiguration.swift */,
-				D17A02BFB8673BB9208CCE39BA1485AF /* VIPlayerState.swift */,
+				748AA78E4B2231667BE8E05B376005D9 /* LICENSE */,
+				1D2206351ACA178CC3308935BF9E011D /* README.md */,
+				B0AD64ED1F76AA7BE8E15C263EA517FA /* VIAudioKit.podspec */,
 			);
-			name = VIAudioPlayer;
-			path = Sources/VIAudioPlayer;
-			sourceTree = "<group>";
-		};
-		6CD532E916BB02D7536A0DCCB8B3CDF6 /* VIAudioDownloader */ = {
-			isa = PBXGroup;
-			children = (
-				1A20790198FAB64D5A31341B4870B91B /* VICacheManager.swift */,
-				87415DBDE5AC4601290FD14BE1BF0C48 /* VICacheSegment.swift */,
-				0C55933F8DDFADCF919676E417316E0F /* VICacheUnit.swift */,
-				4CF01C5A1CAC5CECE5FB1630A2542B1A /* VIChunkedDownloader.swift */,
-				0099FA4EA7BD60B516E2693DC7466BEF /* VIDataSourceResolver.swift */,
-				4753A02326430E2D994BD12314BD7559 /* VIDownloaderConfiguration.swift */,
-				D33B66A31BDEA99D3400F218EC0F4FB8 /* VIDownloadTask.swift */,
-				19757DE5808D97D38F32B0DA6BB576CC /* VILogger.swift */,
-				A43B8316B826C15A6136013DB85D5449 /* VIRangeRequest.swift */,
-			);
-			name = VIAudioDownloader;
-			path = Sources/VIAudioDownloader;
-			sourceTree = "<group>";
-		};
-		7200953C8CE359DDE19AB90DE02516A7 /* VIAudioKit */ = {
-			isa = PBXGroup;
-			children = (
-				C1170D76A85DD32D4B4F4E034D6C1A45 /* Core */,
-				274CBE5B55C2A2953E0993AB5584EB70 /* FFmpeg */,
-				CCB976F490B0D5C8DDC57C86C8799F08 /* Pod */,
-				F21D560155C74BBFADC33D8F24A78807 /* Support Files */,
-			);
-			name = VIAudioKit;
-			path = ../..;
+			name = Pod;
 			sourceTree = "<group>";
 		};
 		9A1810C48CD3D9AC2F648D94E4A8097D /* Frameworks */ = {
@@ -288,41 +328,31 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		B97D437CC6C94340D2FC284A191E4B26 /* VIAudioDecoder */ = {
+		A94B04278C22FF5CA5EC70EE21CB8470 /* Support Files */ = {
 			isa = PBXGroup;
 			children = (
-				DBDF8517CB13415F9B638B343A98E6F3 /* VIAudioDecoding.swift */,
-				EE1180B659D16C5985576D8E93D1A6D0 /* VIAudioSource.swift */,
-				3A3D7AA70009DF571680BD1F3B264D38 /* VILocalFileSource.swift */,
-				1C6D40A7CD60AB3B6A523D237092E95D /* VIMixingDecoder.swift */,
-				FDC9B3E0D1521A253C002B9057A6BE78 /* VINativeDecoder.swift */,
-				ECE74AE1479063D2ACD66987D64EEA5D /* VINetworkAudioSource.swift */,
-				38266F802D191C5331890EA9C60F7303 /* VIPushAudioSource.swift */,
-				CD9D229C62D33DC850807160A3801DAE /* VIStreamDecoder.swift */,
-				63D3BB3B4654F15094C2DDF0F0BDDAE1 /* VIStreamDecoding.swift */,
+				9E1535A154D9D9B1A5C08D088A8A85F0 /* VIAudioKit.modulemap */,
+				06BDAE3FCD0E1B77037DCB6363984C04 /* VIAudioKit-dummy.m */,
+				064C583D92447312A7FE9AE243C9A400 /* VIAudioKit-Info.plist */,
+				8657D538A5FF12D9C9DFCE15BF443302 /* VIAudioKit-prefix.pch */,
+				8BA901421C2C03B268A5677B65264259 /* VIAudioKit-umbrella.h */,
+				86C8647BC1A5F6BCEF5D10FED194EF7B /* VIAudioKit.debug.xcconfig */,
+				787DA2C39983AA928A2ED9B0266AC979 /* VIAudioKit.release.xcconfig */,
 			);
-			name = VIAudioDecoder;
-			path = Sources/VIAudioDecoder;
+			name = "Support Files";
+			path = "Example/Pods/Target Support Files/VIAudioKit";
 			sourceTree = "<group>";
 		};
-		C1170D76A85DD32D4B4F4E034D6C1A45 /* Core */ = {
+		B432AAC631ACE586CC57AD98973C6063 /* VIAudioKit */ = {
 			isa = PBXGroup;
 			children = (
-				B97D437CC6C94340D2FC284A191E4B26 /* VIAudioDecoder */,
-				6CD532E916BB02D7536A0DCCB8B3CDF6 /* VIAudioDownloader */,
-				680734CD2EB7371C1BDCD6C362587573 /* VIAudioPlayer */,
+				447408C67C90E05D95EA4A159DE53524 /* Core */,
+				1DA3FD0637D58892C9CE3779D413D0F8 /* FFmpeg */,
+				7AB297B3E8E9D18A14A1579AF5AAAEFA /* Pod */,
+				A94B04278C22FF5CA5EC70EE21CB8470 /* Support Files */,
 			);
-			name = Core;
-			sourceTree = "<group>";
-		};
-		CCB976F490B0D5C8DDC57C86C8799F08 /* Pod */ = {
-			isa = PBXGroup;
-			children = (
-				53609ADAB4E130A6D318230F46ED9BE1 /* LICENSE */,
-				D0EEC6CA8552D821D09C9860E808D60B /* README.md */,
-				6E05BBAB3226071B1F3FF1FB78DE0C84 /* VIAudioKit.podspec */,
-			);
-			name = Pod;
+			name = VIAudioKit;
+			path = ../..;
 			sourceTree = "<group>";
 		};
 		CF1408CF629C7361332E53B88F7BD30C = {
@@ -364,32 +394,9 @@
 			path = "../Target Support Files/ffmpeg-kit-ios-full";
 			sourceTree = "<group>";
 		};
-		F21D560155C74BBFADC33D8F24A78807 /* Support Files */ = {
-			isa = PBXGroup;
-			children = (
-				09BDFE56A923394EDD97871E01331558 /* VIAudioKit.modulemap */,
-				CA530258807272A4B7D5A9587D9A63C6 /* VIAudioKit-dummy.m */,
-				71281B64ECC647BB9363382617AB829B /* VIAudioKit-Info.plist */,
-				EB687066F34E961621B48827582CFD58 /* VIAudioKit-prefix.pch */,
-				AD74487142663A8C10073FA19AE42F93 /* VIAudioKit-umbrella.h */,
-				30D3B0158E06D0971445CCCEF8856143 /* VIAudioKit.debug.xcconfig */,
-				C79F88430492F33D2FDB7611E8614706 /* VIAudioKit.release.xcconfig */,
-			);
-			name = "Support Files";
-			path = "Example/Pods/Target Support Files/VIAudioKit";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		06B5A3ED9471101BF189CA0214BE7D67 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				F06E12C5E32BEF357208FE281143BCB3 /* VIAudioKit-umbrella.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		16E53AAD1B61E1793B21FB191CE17633 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -398,22 +405,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6DDE2015DC0D643DCE5532AD6754BA6D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5D04CFD190C3CEB87F3A0A5748D2B62 /* VIAudioKit-umbrella.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		59ADFA0D6268F8C78BC5C92A79DFAB77 /* VIAudioKit */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 59E8F96538EE8CEB8153C2B1A64CD391 /* Build configuration list for PBXNativeTarget "VIAudioKit" */;
+			buildConfigurationList = 947BB86E924D7E08247E2C07D17BE4DD /* Build configuration list for PBXNativeTarget "VIAudioKit" */;
 			buildPhases = (
-				06B5A3ED9471101BF189CA0214BE7D67 /* Headers */,
-				8A230F0558D3E58EF333FF06CA40966F /* Sources */,
-				04D1500D8D63203F5B05A8036F344273 /* Frameworks */,
-				CDE9B64502B6AD20A9B1685467D93737 /* Resources */,
+				6DDE2015DC0D643DCE5532AD6754BA6D /* Headers */,
+				22CFEF1B05D5CA8BB28D4567FF5A4A7B /* Sources */,
+				3BD58B320785113492FBBCA44982B460 /* Frameworks */,
+				ABA913A7153E8E93C0B7D9C29B8BB05E /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				D33D84AC0D47B207E55075C1010D620D /* PBXTargetDependency */,
+				0923E8F3004ABF1616CB84C3F4277C41 /* PBXTargetDependency */,
 			);
 			name = VIAudioKit;
 			productName = VIAudioKit;
@@ -432,8 +447,8 @@
 			buildRules = (
 			);
 			dependencies = (
-				14BD143D5C8EA13B064EA0FD40104A3D /* PBXTargetDependency */,
-				9723F84D691A80BDDB6A5596E3667915 /* PBXTargetDependency */,
+				7092883F34B712C5B91FADAB76ED52C3 /* PBXTargetDependency */,
+				75DA957354496C7C24C39C4E2AB52FB1 /* PBXTargetDependency */,
 			);
 			name = "Pods-VIAudioKitDemo";
 			productName = Pods_VIAudioKitDemo;
@@ -479,7 +494,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CDE9B64502B6AD20A9B1685467D93737 /* Resources */ = {
+		ABA913A7153E8E93C0B7D9C29B8BB05E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -489,7 +504,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		059342F474BCA587B188EA555D7EB26F /* [CP] Copy XCFrameworks */ = {
+		7EBC5A3157A78FD9941E4C7ED030944F /* [CP] Copy XCFrameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -509,6 +524,45 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		22CFEF1B05D5CA8BB28D4567FF5A4A7B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D3E179479878272E2F5078A36079DC /* FFmpegResampler.swift in Sources */,
+				615E5ADB0192AF0C2DB64A558FA021F8 /* VIAudioBufferQueue.swift in Sources */,
+				A953DBD28EFE1C12C02BEBC502130448 /* VIAudioDecoding.swift in Sources */,
+				0F6E0A15D0125D20017BBC5D7BD25730 /* VIAudioKit-dummy.m in Sources */,
+				0FF306A6B2238B4B172B2EB98CE5C749 /* VIAudioPlayer.swift in Sources */,
+				B1DA0FA194CC36A5B6FE027E82D68E85 /* VIAudioPlayer+Decoding.swift in Sources */,
+				AFCABC12CAB8964B609DD422130ACBCB /* VIAudioPlayer+Loading.swift in Sources */,
+				C3DF57B1832C246DF71396A657C4FFBA /* VIAudioPlayer+Playback.swift in Sources */,
+				C7D5FF78E021E23F9208BBBDFA8D6B49 /* VIAudioPlayer+TimingAndBuffering.swift in Sources */,
+				E37D8EF864DFB9ECE25620C5C2BBD522 /* VIAudioRenderer.swift in Sources */,
+				F77D53B4A746E72A9A6B1C37C55D0456 /* VIAudioSource.swift in Sources */,
+				8F5EACB7722B1A06C9F47ADF6CF95E01 /* VICacheManager.swift in Sources */,
+				1D0A53258576ABBCE1DC6C69FE924A6D /* VICacheSegment.swift in Sources */,
+				9643144DAE915D575E2C457F65BB0F93 /* VICacheUnit.swift in Sources */,
+				D790727A91C1C2CB4DCB69BBE9B3D9E6 /* VIChunkedDownloader.swift in Sources */,
+				B2FBD2CB8D88FC64642DE1330B96E53F /* VIDataSourceResolver.swift in Sources */,
+				719FA5F024A10A1DA98BD8FAA086B04A /* VIDownloaderConfiguration.swift in Sources */,
+				1BED85437CAE7A684F55CAF263007F3C /* VIDownloadTask.swift in Sources */,
+				325B98A2F86B62942C9A462217C985FA /* VIFFmpegDecoder.swift in Sources */,
+				46EFD1235EA4C104923FA4D69217AEE9 /* VIFFmpegStreamDecoder.swift in Sources */,
+				CC96F62AB71C4E1304069CAEE576FBEA /* VILocalFileSource.swift in Sources */,
+				22666EB473D03CA48E999233500263E2 /* VILogger.swift in Sources */,
+				6C0B121896B142E24A599A67231F1AC2 /* VIMixingDecoder.swift in Sources */,
+				05B6679C86E68990FC1EC924C71C0829 /* VINativeDecoder.swift in Sources */,
+				78D160A044B7E8FDED036833C1C2D2E3 /* VINetworkAudioSource.swift in Sources */,
+				94F18EB755DAF30E64F26F1A8A130842 /* VIPlayerConfiguration.swift in Sources */,
+				1DAC7B36D8ABB581FE8DC729AD0FC02F /* VIPlayerState.swift in Sources */,
+				A7600F68A0E1A07D5DAF0949A8B4C0D6 /* VIPushAudioSource.swift in Sources */,
+				7F7B9A5B8A159E85DDA0FCC5D04B0B54 /* VIRangeRequest.swift in Sources */,
+				55EBBF638D94F59345E8BB7F73FA5E72 /* VIRingBuffer.swift in Sources */,
+				F41F26F55F0D40B5725A61B8164DF6AB /* VIStreamDecoder.swift in Sources */,
+				D06A122F20AB316B1BB05691772CE387 /* VIStreamDecoding.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		65494453825DA0971291244498BD29C1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -517,67 +571,52 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		8A230F0558D3E58EF333FF06CA40966F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				D88CA93B31585F53D172B45591947F66 /* FFmpegResampler.swift in Sources */,
-				2E474729992AD732CC9ECF8A4C7B8444 /* VIAudioBufferQueue.swift in Sources */,
-				174BA583E71912181D9DBC22BA354B77 /* VIAudioDecoding.swift in Sources */,
-				F0AE90072AD5361E5917EC2A465F6B44 /* VIAudioKit-dummy.m in Sources */,
-				79108433274060ED5D7943FE3C8FDF1D /* VIAudioPlayer.swift in Sources */,
-				67B8783AF4265E8C64DB99B4BFC702ED /* VIAudioRenderer.swift in Sources */,
-				1B71BD2DD8DDCD96EE1764A8F442A121 /* VIAudioSource.swift in Sources */,
-				6277C4F7BF2556C142E77ED3C1C0F88F /* VICacheManager.swift in Sources */,
-				8DDF5383CB8572C50EC508FB36A2CE82 /* VICacheSegment.swift in Sources */,
-				E4A91EA448ABCECCD50304959689C776 /* VICacheUnit.swift in Sources */,
-				8FFF50EA55579A92E784614CD9A47BAC /* VIChunkedDownloader.swift in Sources */,
-				8AAED9AF03733C4F021C098359307B58 /* VIDataSourceResolver.swift in Sources */,
-				24EDEAD228EBC9CC0FEC75A54E788608 /* VIDownloaderConfiguration.swift in Sources */,
-				1AA60727159573177DBE3168B39D4751 /* VIDownloadTask.swift in Sources */,
-				7CCF24ACE75C9FD6E8BEEAA67410ACAE /* VIFFmpegDecoder.swift in Sources */,
-				C588E4D628A64DD55107106748AA7627 /* VIFFmpegStreamDecoder.swift in Sources */,
-				3C7D0C3B83DC77E0D9F8B6E7CE5846A1 /* VILocalFileSource.swift in Sources */,
-				494E7D0E9EBDF3D87BE27E30EB07E27C /* VILogger.swift in Sources */,
-				C39CDFF87DE8EFC540B3F953305AB7AB /* VIMixingDecoder.swift in Sources */,
-				0FDD5FD7E0F831885787B49A582B5067 /* VINativeDecoder.swift in Sources */,
-				F810DBE1EA9C8469B3A95001EC0470FA /* VINetworkAudioSource.swift in Sources */,
-				91A35539F9CC67BEC0C1706F8A983FB7 /* VIPlayerConfiguration.swift in Sources */,
-				044F736F2E290CEA59C2DD21548AAB71 /* VIPlayerState.swift in Sources */,
-				48C1F01B0C04A3C1677A6E50EA3A7566 /* VIPushAudioSource.swift in Sources */,
-				0FF019F5B66484F095B29F7C42F44E44 /* VIRangeRequest.swift in Sources */,
-				5F4218A9574FD11A0D99DC412AF0375A /* VIStreamDecoder.swift in Sources */,
-				CAC8DC4EAD35C3436C9E0BA93BDAF200 /* VIStreamDecoding.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		14BD143D5C8EA13B064EA0FD40104A3D /* PBXTargetDependency */ = {
+		0923E8F3004ABF1616CB84C3F4277C41 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "ffmpeg-kit-ios-full";
+			target = 99C9B375C2185AA3E53316AC4BF6ECE7 /* ffmpeg-kit-ios-full */;
+			targetProxy = C5450DE45AD327CC336FE80B5E01972E /* PBXContainerItemProxy */;
+		};
+		7092883F34B712C5B91FADAB76ED52C3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = VIAudioKit;
 			target = 59ADFA0D6268F8C78BC5C92A79DFAB77 /* VIAudioKit */;
-			targetProxy = 5BC1ADDDA8FE42B333FE3EB39B330E40 /* PBXContainerItemProxy */;
+			targetProxy = 946CDF2236E8D2F3EA439AA5E77DAE7B /* PBXContainerItemProxy */;
 		};
-		9723F84D691A80BDDB6A5596E3667915 /* PBXTargetDependency */ = {
+		75DA957354496C7C24C39C4E2AB52FB1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "ffmpeg-kit-ios-full";
 			target = 99C9B375C2185AA3E53316AC4BF6ECE7 /* ffmpeg-kit-ios-full */;
-			targetProxy = BFDFE208894FA2BD02FB00F6A40C42EF /* PBXContainerItemProxy */;
-		};
-		D33D84AC0D47B207E55075C1010D620D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "ffmpeg-kit-ios-full";
-			target = 99C9B375C2185AA3E53316AC4BF6ECE7 /* ffmpeg-kit-ios-full */;
-			targetProxy = F98CB7174F7E1E804AD32A40DCAF8E15 /* PBXContainerItemProxy */;
+			targetProxy = 8097D7C0A2CAAD12F1C75C76B4CDD420 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		0DB1D2F4A038F3459D613467A683A3B5 /* Debug */ = {
+		060FCCFE98B1C97A01892F3210FD1111 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 30D3B0158E06D0971445CCCEF8856143 /* VIAudioKit.debug.xcconfig */;
+			baseConfigurationReference = 80033CE1EFB352B9BAC50A2CC21176C5 /* ffmpeg-kit-ios-full.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		437C0B8A697E553280356F1BCFEF9713 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 787DA2C39983AA928A2ED9B0266AC979 /* VIAudioKit.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -609,10 +648,11 @@
 				SWIFT_INSTALL_OBJC_HEADER = YES;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = Debug;
+			name = Release;
 		};
 		4F8B9735F14A5672991887FDF2ED99D3 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -653,6 +693,24 @@
 				VERSION_INFO_PREFIX = "";
 			};
 			name = Release;
+		};
+		724C0CC2572A88ADA5594C5B17FED5A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BDA6972273F75D89BCE886C5CEFE894B /* ffmpeg-kit-ios-full.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		90D4D09BCB6A4660E43ACBE9ECB6FE9A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -821,46 +879,9 @@
 			};
 			name = Debug;
 		};
-		BD9C1A96FDE4A6B0E7A6B1FE0C35547D /* Debug */ = {
+		D3F629BDF6D69A659565702F2A7DD9A7 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BDA6972273F75D89BCE886C5CEFE894B /* ffmpeg-kit-ios-full.debug.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		CA4F9877B8EFF6CD59C5CB2611428BA2 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 80033CE1EFB352B9BAC50A2CC21176C5 /* ffmpeg-kit-ios-full.release.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		DE6A22EDAD984F73B278AB2FDCF8D8E2 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = C79F88430492F33D2FDB7611E8614706 /* VIAudioKit.release.xcconfig */;
+			baseConfigurationReference = 86C8647BC1A5F6BCEF5D10FED194EF7B /* VIAudioKit.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -892,11 +913,10 @@
 				SWIFT_INSTALL_OBJC_HEADER = YES;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = Release;
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -910,15 +930,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		59E8F96538EE8CEB8153C2B1A64CD391 /* Build configuration list for PBXNativeTarget "VIAudioKit" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0DB1D2F4A038F3459D613467A683A3B5 /* Debug */,
-				DE6A22EDAD984F73B278AB2FDCF8D8E2 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		5D99244FA15F9469CA8EF5A2570A277C /* Build configuration list for PBXNativeTarget "Pods-VIAudioKitDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -928,11 +939,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		713190BDA516EA71A77B835B9AE0AB1E /* Build configuration list for PBXAggregateTarget "ffmpeg-kit-ios-full" */ = {
+		947BB86E924D7E08247E2C07D17BE4DD /* Build configuration list for PBXNativeTarget "VIAudioKit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BD9C1A96FDE4A6B0E7A6B1FE0C35547D /* Debug */,
-				CA4F9877B8EFF6CD59C5CB2611428BA2 /* Release */,
+				D3F629BDF6D69A659565702F2A7DD9A7 /* Debug */,
+				437C0B8A697E553280356F1BCFEF9713 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BA3FCC6D13871198949758E7C613A877 /* Build configuration list for PBXAggregateTarget "ffmpeg-kit-ios-full" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				724C0CC2572A88ADA5594C5B17FED5A1 /* Debug */,
+				060FCCFE98B1C97A01892F3210FD1111 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
